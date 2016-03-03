@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>test</title>
+
+    <link rel="stylesheet" href="vendor/ol.css" type="text/css">
+    <!--Import Google Icon Font-->
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="vendor/materialize.min.css"  media="screen,projection"/>
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=DKpnmZo8fX4xT7EfLjN9BCvd"></script>
+    <script src='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/leaflet.markercluster.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.css' rel='stylesheet' />
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.Default.css' rel='stylesheet' />
+
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-heat/v0.1.3/leaflet-heat.js'></script>
+    <!--<script src="http://openlayers.org/en/v3.12.1/build/ol.js"></script>-->
+    
+    <!-- build:css css/main.css -->
+    <link rel="stylesheet" href="css/main.css">
+    <!-- endbuild -->
+
+</head>
+<body>
+<header>
+    可视化
+</header>
+<div class="row" id="main">
+    <div class="col s3" id="tool-container">
+        <div id="weibo-vis" class="tool-item teal lighten-2 active" data-control='map'>微博</div>
+        <div id='poi-vis' class="tool-item teal lighten-2" data-control='bdmap'>POI</div>
+        <div id='taxi-vis' class="tool-item teal lighten-2" data-control='bdmap-t'>出租车轨迹</div>
+    </div>
+    <div class="col s9" id="map-container">
+        <div id="map"></div>
+        <div id="bdmap">
+            <div id="marker-lens"></div>
+            <div id='zoomlens' class='overlay'>
+                <div class='overlay rotater'>
+                    <div class='overlay rotater'>
+                        <div id='zoommap' class='overlay'></div>
+                    </div>
+                </div>
+                <div id='border' class='overlay'></div>
+            </div>
+        </div>
+        <div id="bdmap-t">
+            
+        </div>
+        <div id="tooltip">
+            <div id="tooltip-header">共15条微博</div>
+            <div id="tooltip-content"></div>
+        </div>
+       
+    </div>
+</div>
+
+</body>
+    <!--Import jQuery before materialize.js-->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="vendor/materialize.min.js"></script>
+
+    <script src="vendor/ol-debug.js"></script>
+
+    <!-- <script src="vendor/echarts3-BMap.js"></script> -->
+    <!-- <script src="vendor/echarts.27.js"></script> -->
+    <script src="vendor/echarts.min.js"></script>
+ 	<!-- build:js js/bundle.js -->
+    <script type="text/javascript" src="js/bundle.js"></script>
+    <!-- endbuild -->
+   
+</html>
