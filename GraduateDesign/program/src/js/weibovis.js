@@ -39,9 +39,13 @@ function getWeiboData (city,map,idfArray) {
 	
 }
 
-/*
-* 数据返回回调函数
-*/
+/**
+ * 获取微博数据 回调函数
+ * @param  {[Array]} data     [微博数据:[{text:..,geo:..},{}]]
+ * @param  {[Object]} map      [leaflet地图对象]
+ * @param  {[Array]} idfArray [idf数据]
+ * @return {[null]}          [null]
+ */
 function handleWeiboData(data,map,idfArray){
 	data=JSON.parse(data);
     var markers = new L.MarkerClusterGroup({
@@ -75,6 +79,8 @@ function handleWeiboData(data,map,idfArray){
             return new L.DivIcon(divOption);
         }
     });
+    
+    //add marker to markers
 	for(var x in data){
 		var item=data[x];
 		var lat=item.geo.coordinates[0];
@@ -95,201 +101,63 @@ function handleWeiboData(data,map,idfArray){
         markers.addLayer(marker);
 
 	}
+    markers.on("clustermouseover",showWeiboDetail);
     map.addLayer(markers);
-	// var vectorSource=new ol.source.Vector({
-	// 	features:features
-	// });
-	// // var vectorLayer=new ol.layer.Vector({
-	// // 	source:vectorSource
-	// // });
-	// var styleCache = {};
-	// var clusterSource=new ol.source.Cluster({
-	// 	distance:100,
-	// 	source:vectorSource
-		
-	// });
-	// var clusterLayer=new ol.layer.Vector({
-	// 	source:clusterSource,
-	// 	style: function(feature, resolution){
-	// 		//console.log(feature);
-	// 		//console.log(resolution);
-	// 		features=feature.get('features')
-	// 		var size = features.length;
-	// 		var text='';
-	// 		for(var i=0;i<size;i++){
-	// 			var fe=features[i]
-	// 			text+=fe.get('text');
-	// 		}
-	// 		var innerTag=wordseg(text,idfArray);
-			
-	// 		feature.set('name',innerTag,true);
- //            feature.values_.name = innerTag;
-			
-	// 		//console.log(size);
- //    		var style = styleCache[size];
- //    		if(!style){
- //    			style = new ol.style.Style({
-	// 		      image: new ol.style.Circle({
-	// 		        radius: Math.log(size)*4+15,
-	// 		        stroke: new ol.style.Stroke({
-	// 		          color: '#fff'
-	// 		        }),
-	// 		        fill: new ol.style.Fill({
-	// 		          color: '#3399CC'
-	// 		        })
-	// 		      }),
-	// 		      text: new ol.style.Text({
-	// 		        text: innerTag,
-	// 		        fill: new ol.style.Fill({
-	// 		          color: '#fff'
-	// 		        })
-	// 		      }),
-	// 		      name:innerTag
-	// 		    });
-	// 		    styleCache[size]=style;
- //    		}
-	// 		return style
-	// 	}
-	// });
-
-	// map.addLayer(clusterLayer);
-	// map.on("pointermove",function(event){
-	// 	//console.log(event);
-	// 	showWeiboDetail(event.pixel,map,idfArray);
-	// },map);
-
-	// var weibo_select_inter=new ol.interaction.Select({
-	//     condition: function(evt) {
-	//     	console.log(evt);
-	//       //return evt.originalEvent.type == 'mousemove' ||
-	//           evt.type == 'singleclick';
-	//     }
-	// });
-	// map.addInteraction(weibo_select_inter);
 }
 
-function createTextCluster(data,idfArray){
-    var markers = new L.MarkerClusterGroup({
-        showCoverageOnHover: false,
-        zoomToBoundsOnClick: false,
-        iconCreateFunction: function(cluster) {
-            console.log(cluster.getAllChildMarkers());
-            var markers = cluster.getAllChildMarkers();
-            var allText = '';
-            for(var i=0,length = markers.length;i<length;i++){
-                allText += markers[i].title;
-            }
-            var innerTag=wordseg(allText,idfArray);
-            var c = ' marker-cluster-';
-            if (length < 10) {
-                c += 'small';
-            } else if (length < 100) {
-                c += 'medium';
-            } else {
-                c += 'large';
-            }
-            return new L.DivIcon({ html: '<div><span>' + innerTag + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
-        }
-    });
-    for(var i = 0,length = data.length;i<length;i++){
-        var latlng = new L.LatLng(data[i][0],data[i][1]);
-        var marker = L.marker(latlng, {
-            icon: L.mapbox.marker.icon({'marker-symbol': 'post', 'marker-color': '0044FF'}),
-            title:data[i][2]
-        });
-        markers.addLayer(marker);
-    }
-    return markers;
-}
 
-function showWeiboDetail(pixel,map,idfArray){
+
+function showWeiboDetail(e){
+
 	var tooltip = $("#tooltip");
 	var tooltip_content = $("#tooltip-content");
-	//console.log($("#map")[0].offsetLeft);
+    var centerText = e.layer._icon.textContent;
+    var point = e.target._map.latLngToContainerPoint(e.latlng);
+    console.log(point);
 
-	var feature = map.forEachFeatureAtPixel(pixel, function(featureObj, layer) {
-		tooltip.css("left",pixel[0]+$("#map")[0].offsetLeft);
-		tooltip_content.css("width",'200px');
-		tooltip_content.css("height",'200px');
-		tooltip.css("width",'205px');
-		tooltip.css("height",'245px');
-		tooltip.css("top",pixel[1]);
-		tooltip_content.empty();
-		var centerText = featureObj.get("name");
-       
-       
-		var features = featureObj.get("features");
-		var allText = ''
-		for(var i=0;i<features.length;i++){
-            feature=features[i];
-            var text=feature.get("text");
-            allText += text;
-        }
 
-        centerText = wordseg(allText,idfArray);
-        console.log(featureObj);
-        console.log(centerText);
+    //获取当前的markers
+    var currentMarkers = e.layer.getAllChildMarkers();
 
-		var related_weibo_num=0;
-		tooltip.show();
-        var feature;
-	   	for(var i=0;i<features.length;i++){
-	   		feature = features[i];
-	   		var text = feature.get("text");
-	   		var center_index = text.indexOf(centerText);
-	   		var centerReg = new RegExp(centerText,'g');
-	   		if(center_index!=-1){
-	   			related_weibo_num++;
-	   			text=text.replace(centerReg,"<span class='weibo-center-text'>"+centerText+"</span>")
-	   			tooltip_content.append("<div class='weibo-text-item'>"+text+"</div>");
-	   		}
-	   	}
-	   	$("#tooltip-header").html("共" + related_weibo_num + "条相关微博");
-	   	return feature;
-	   	
-	});
-	if(!feature){
-		tooltip.hide();
-	}
-	//console.log(feature);
+	tooltip.css("left",point.x+$("#map")[0].offsetLeft);
+	tooltip_content.css("width",'200px');
 	
+	tooltip.css("width",'205px');
+	
+    if($("#map").height()-point.y<=250){
+        tooltip.css("top",point.y-250);
+    }else{
+        tooltip.css("top",point.y);
+    }
+	
+	tooltip_content.empty();
+
+	var related_weibo_num=0;
+	tooltip.show();
+    var centerReg = new RegExp(centerText,'g');
+   	for(var i=0,length = currentMarkers.length;i<length;i++){
+   		var marker = currentMarkers[i];
+   		var text = marker.options.title;
+   		var center_index = text.indexOf(centerText);
+   		if(center_index!=-1){
+   			related_weibo_num++;
+   			text=text.replace(centerReg,"<span class='weibo-center-text'>"+centerText+"</span>")
+   			tooltip_content.append("<div class='weibo-text-item'>"+text+"</div>");
+   		}
+   	}
+    var text_item = $('.weibo-text-item:last-child');
+    console.log(text_item[0].offsetTop);
+    if(text_item[0].offsetTop>190){
+        tooltip.css("height",'245px');
+        tooltip_content.css("height",'200px');
+    }else{
+        tooltip.css("height",'');
+        tooltip_content.css("height",'');
+    }
+
+   	$("#tooltip-header").html("共" + related_weibo_num + "条相关微博");
+
 }
-// function selectStyleFunction(feature, resolution) {
-//   var styles = [new ol.style.Style({
-//     image: new ol.style.Circle({
-//       radius: feature.get('radius'),
-//       fill: invisibleFill
-//     })
-//   })];
-//   var originalFeatures = feature.get('features');
-//   var originalFeature;
-//   for (var i = originalFeatures.length - 1; i >= 0; --i) {
-//     originalFeature = originalFeatures[i];
-//     styles.push(createEarthquakeStyle(originalFeature));
-//   }
-//   return styles;
-// }
-
-// function createEarthquakeStyle(feature) {
-//   // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
-//   // standards-violating <magnitude> tag in each Placemark.  We extract it
-//   // from the Placemark's name instead.
-//   var name = feature.get('name');
-//   var magnitude = parseFloat(name.substr(2));
-//   var radius = 5 + 20 * (magnitude - 5);
-
-//   return new ol.style.Style({
-//     geometry: feature.getGeometry(),
-//     image: new ol.style.RegularShape({
-//       radius1: radius,
-//       radius2: 3,
-//       points: 5,
-//       angle: Math.PI,
-//       fill: earthquakeFill,
-//       stroke: earthquakeStroke
-//     })
-//   });
-// }
 
 var wordsAndValue = [];
 var wordsOnly = [];

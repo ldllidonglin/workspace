@@ -54,17 +54,12 @@ function initMap(domId){
 function createCluster(data){
 	var markers = new L.MarkerClusterGroup({
 	    showCoverageOnHover: false,
-	    zoomToBoundsOnClick: false,
-	    iconCreateFunction: function(cluster) {
-	    	console.log(cluster.getAllChildMarkers());
-			return L.divIcon({ html: '<b>' + 11 + '</b>' });
-		}
+	    zoomToBoundsOnClick: false
 	});
 	for(var i = 0,length = data.length;i<length;i++){
 		var latlng = new L.LatLng(data[i][0],data[i][1]);
 		var marker = L.marker(latlng, {
-	        icon: L.mapbox.marker.icon({'marker-symbol': 'post', 'marker-color': '0044FF'}),
-	    	title:'1'
+	        icon: L.mapbox.marker.icon({'marker-symbol': 'post', 'marker-color': '0044FF'})
 	    });
 	    markers.addLayer(marker);
 	}
