@@ -6,7 +6,8 @@ function taxiVisChart(domId){
 		//注册map
   		echarts.registerMap('wuhan', JSON.parse(data));
 
-  		$.get("http://202.114.123.53/zx/taxi/getAllOdDataM.php").then(function(data){
+  		$.get("http://202.114.123.53/zx/taxi/getAllOdDataM.php")
+  		.then(function(data){
 			var taxi_data = JSON.parse(data);
 
 			var draw_data = {};
@@ -101,23 +102,142 @@ function taxiEchartsMap(data,myChart){
 	        },
 	        selectedMode: 'single'
 	    },
-	    geo: {
-	        map: 'wuhan',
-	        label: {
-	            emphasis: {
-	                show: false
-	            }
-	        },
-	        roam: true,
-	        itemStyle: {
-	            normal: {
-	                areaColor: '#323c48',
-	                borderColor: '#404a59'
+	    bmap: {
+	    	center: [114.274462,30.608623],
+            zoom: 11,
+            roam: true,
+            mapStyle: {
+                styleJson: [
+	            {
+                   "featureType": "water",
+                   "elementType": "all",
+                   "stylers": {
+                        "color": "#044161"
+                }
 	            },
-	            emphasis: {
-	                areaColor: '#2a333d'
+	            {
+	                "featureType": "land",
+	                "elementType": "all",
+	                "stylers": {
+	                    "color": "#004981"
+	                }
+	            },
+	            {
+                   "featureType": "boundary",
+                   "elementType": "geometry",
+                   "stylers": {
+                        "color": "#064f85"
+                   }
+	            },
+	            {
+                   "featureType": "railway",
+                   "elementType": "all",
+                   "stylers": {
+                        "visibility": "off"
+                   }
+	            },
+	            {
+                   "featureType": "highway",
+                   "elementType": "geometry",
+                   "stylers": {
+                        "color": "#004981"
+                   }
+	            },
+	            {
+                   "featureType": "highway",
+                   "elementType": "geometry.fill",
+                   "stylers": {
+                        "color": "#005b96",
+                        "lightness": 1
+                   }
+	            },
+	            {
+                   "featureType": "highway",
+                   "elementType": "labels",
+                   "stylers": {
+                        "visibility": "off"
+                   }
+	            },
+	            {
+                   "featureType": "arterial",
+                   "elementType": "geometry",
+                   "stylers": {
+                        "color": "#004981"
+                   }
+	            },
+	            {
+                   "featureType": "arterial",
+                   "elementType": "geometry.fill",
+                   "stylers": {
+                        "color": "#00508b"
+                   }
+	            },
+	            {
+                   "featureType": "poi",
+                   "elementType": "all",
+                   "stylers": {
+                        "visibility": "off"
+                   }
+	            },
+	            {
+                   "featureType": "green",
+                   "elementType": "all",
+                   "stylers": {
+                        "color": "#056197",
+                        "visibility": "off"
+                   }
+	            },
+	            {
+                   "featureType": "subway",
+                   "elementType": "all",
+                   "stylers": {
+                        "visibility": "off"
+                   }
+	            },
+	            {
+                   "featureType": "manmade",
+                   "elementType": "all",
+                   "stylers": {
+                        "visibility": "off"
+                   }
+	            },
+	            {
+                   "featureType": "local",
+                   "elementType": "all",
+                   "stylers": {
+                        "visibility": "off"
+                   }
+	            },
+	            {
+                   "featureType": "arterial",
+                   "elementType": "labels",
+                   "stylers": {
+                        "visibility": "off"
+                   }
+	            },
+	            {
+                   "featureType": "boundary",
+                   "elementType": "geometry.fill",
+                   "stylers": {
+                        "color": "#029fd4"
+                   }
+	            },
+	            {
+                   "featureType": "building",
+                   "elementType": "all",
+                   "stylers": {
+                        "color": "#1a5787"
+                   }
+	            },
+	            {
+                   "featureType": "label",
+                   "elementType": "all",
+                   "stylers": {
+                        "visibility": "off"
+                   }
 	            }
-	        }
+                ]
+            }
 	    },
 	    visualMap: [{
 	    	type:'continuous',
@@ -147,6 +267,7 @@ function taxiEchartsMap(data,myChart){
 			{
 				name:n,
 				type:'lines',
+				coordinateSystem: 'bmap',
 				effect: {
 		            show: true,
 		            period: 6,
@@ -167,6 +288,7 @@ function taxiEchartsMap(data,myChart){
 			{
 		        name: n,
 		        type: 'lines',
+		        coordinateSystem: 'bmap',
 		        zlevel: 1,
 		        effect: {
 		            show: true,
@@ -187,7 +309,7 @@ function taxiEchartsMap(data,myChart){
 		    {
 		        name: n,
 		        type: 'effectScatter',
-		        coordinateSystem: 'geo',
+		        coordinateSystem: 'bmap',
 		        zlevel: 2,
 		        rippleEffect: {
 		            brushType: 'stroke'
