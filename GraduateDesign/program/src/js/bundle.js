@@ -91,6 +91,11 @@ exports.layoutIni = layoutIni;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+/**
+ * POI Visualization Map
+ * @param  {[String]} domId [id of map's container]
+ * @return {[null]}       [null]
+ */
 function poiVisMap(domId) {
 	var map = initMap(domId);
 	$.get("http://202.114.123.53/zx/weibo/getWeiboData.php", { 'city': '武汉' }).then(function (data) {
@@ -109,6 +114,9 @@ function poiVisMap(domId) {
 		map.addLayer(heatMap);
 
 		var cluster = createCluster(points);
+		cluster.on('layerremove', function (e) {
+			console.log('heat');
+		});
 
 		createClusterLens(cluster, map, 'zoomlens');
 
@@ -130,9 +138,9 @@ function poiVisMap(domId) {
 }
 
 /**
- * 初始化地图
- * @param  {[string]} domId [地图容器dom id]
- * @return {[obj]}       [地图对象]
+ * initialize the map
+ * @param  {[String]} domId [id of map's container]
+ * @return {[Object]}       [map]
  */
 function initMap(domId) {
 	L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
@@ -140,6 +148,11 @@ function initMap(domId) {
 	return map;
 }
 
+/**
+ * create ClusterGroup
+ * @param  {[Array]} data [like [[lat1,lon1],[lat2,lon2],...]  ]
+ * @return {[Object]}      [MarkerClusterGroup]
+ */
 function createCluster(data) {
 	var markers = new L.MarkerClusterGroup({
 		showCoverageOnHover: false,
@@ -158,10 +171,10 @@ function createCluster(data) {
 
 /**
  * 创建cluster的lens
- * @param  {MarkerClusterGroup} cluster  [需要创建lens的MarkerClusterGroup]
- * @param  {L.Map} map      [主图的map对象]
- * @param  {string} lendomId [lens的domId]
- * @return {null}          [description]
+ * @param  {Object} cluster  [the cluster Object]
+ * @param  {Object} map      [map object]
+ * @param  {String} lendomId [lens's container ]
+ * @return {null}          [null]
  */
 function createClusterLens(cluster, map, lendomId) {
 	//初始化zoommap
@@ -176,7 +189,7 @@ function createClusterLens(cluster, map, lendomId) {
 	cluster.on('clustermouseover', function (e) {
 
 		var point = map.latLngToContainerPoint(e.latlng);
-
+		$(zl).show();
 		//获取当前的markers
 		var clickMarkers = e.layer.getAllChildMarkers();
 		//移除lens中的marker
@@ -201,12 +214,26 @@ function createClusterLens(cluster, map, lendomId) {
 		//设置zoommap的显示区域
 		zoommap.setView(e.latlng, map.getZoom() + 1, true);
 	});
-}
 
+	cluster.on('clusterlayerremove', function (e) {
+		console.log(e);
+	});
+	// var originRemove = cluster.onRemove;
+	// cluster.onRemove=function(){
+	// 	originRemove();
+	// 	console.log('3');
+	// }
+}
+/**
+ * create HeatMap
+ * @param  {Array} data [like [[lat,lon,value],[lat,lon,value],...] ]
+ * @return {[Object]}      [heatLayer]
+ */
 function createHeatMap(data) {
 	var heat = L.heatLayer(data, { radius: 25 });
 	return heat;
 }
+
 exports.poiVisMap = poiVisMap;
 
 },{}],4:[function(require,module,exports){
@@ -605,7 +632,9 @@ function handleWeiboData(data, map, idfArray) {
         });
         markers.addLayer(marker);
     }
+    //绑定tooltip
     markers.on("clustermouseover", showWeiboDetail);
+    markers.on("clustermouseout", hideWeiboDetail);
     map.addLayer(markers);
 }
 
@@ -615,16 +644,15 @@ function showWeiboDetail(e) {
     var tooltip_content = $("#tooltip-content");
     var centerText = e.layer._icon.textContent;
     var point = e.target._map.latLngToContainerPoint(e.latlng);
-    console.log(point);
 
     //获取当前的markers
     var currentMarkers = e.layer.getAllChildMarkers();
 
     tooltip.css("left", point.x + $("#map")[0].offsetLeft);
     tooltip_content.css("width", '200px');
-
     tooltip.css("width", '205px');
 
+    //如果point在下方，为避免出现tips超出主图区域，故让tips左下角定位在center
     if ($("#map").height() - point.y <= 250) {
         tooltip.css("top", point.y - 250);
     } else {
@@ -636,6 +664,7 @@ function showWeiboDetail(e) {
     var related_weibo_num = 0;
     tooltip.show();
     var centerReg = new RegExp(centerText, 'g');
+    //填充内容并高亮关键字
     for (var i = 0, length = currentMarkers.length; i < length; i++) {
         var marker = currentMarkers[i];
         var text = marker.options.title;
@@ -647,7 +676,7 @@ function showWeiboDetail(e) {
         }
     }
     var text_item = $('.weibo-text-item:last-child');
-    console.log(text_item[0].offsetTop);
+    //如果内容高度超出范围，设定具体高度出现overflow，否则tips的高度就是内容的实际高度
     if (text_item[0].offsetTop > 190) {
         tooltip.css("height", '245px');
         tooltip_content.css("height", '200px');
@@ -657,6 +686,9 @@ function showWeiboDetail(e) {
     }
 
     $("#tooltip-header").html("共" + related_weibo_num + "条相关微博");
+}
+function hideWeiboDetail(e) {
+    $("#tooltip").hide();
 }
 
 var wordsAndValue = [];

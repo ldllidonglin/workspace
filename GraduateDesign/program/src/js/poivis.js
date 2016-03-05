@@ -1,3 +1,8 @@
+/**
+ * POI Visualization Map
+ * @param  {[String]} domId [id of map's container]
+ * @return {[null]}       [null]
+ */
 function poiVisMap(domId){
 	var map=initMap(domId);
 	$.get("http://202.114.123.53/zx/weibo/getWeiboData.php",{'city':'武汉'}).then(function(data){
@@ -14,9 +19,11 @@ function poiVisMap(domId){
 
 		var heatMap = createHeatMap(heatMapPoint);
 		map.addLayer(heatMap);
-
-		var cluster = createCluster(points);
 		
+		var cluster = createCluster(points);
+		cluster.on('layerremove',function(e){
+			console.log('heat');
+		});
 
 		createClusterLens(cluster,map,'zoomlens');
 
@@ -40,9 +47,9 @@ function poiVisMap(domId){
 }
 
 /**
- * 初始化地图
- * @param  {[string]} domId [地图容器dom id]
- * @return {[obj]}       [地图对象]
+ * initialize the map
+ * @param  {[String]} domId [id of map's container]
+ * @return {[Object]}       [map]
  */
 function initMap(domId){
 	L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
@@ -51,6 +58,11 @@ function initMap(domId){
     return map;
 }
 
+/**
+ * create ClusterGroup
+ * @param  {[Array]} data [like [[lat1,lon1],[lat2,lon2],...]  ]
+ * @return {[Object]}      [MarkerClusterGroup]
+ */
 function createCluster(data){
 	var markers = new L.MarkerClusterGroup({
 	    showCoverageOnHover: false,
@@ -69,10 +81,10 @@ function createCluster(data){
 
 /**
  * 创建cluster的lens
- * @param  {MarkerClusterGroup} cluster  [需要创建lens的MarkerClusterGroup]
- * @param  {L.Map} map      [主图的map对象]
- * @param  {string} lendomId [lens的domId]
- * @return {null}          [description]
+ * @param  {Object} cluster  [the cluster Object]
+ * @param  {Object} map      [map object]
+ * @param  {String} lendomId [lens's container ]
+ * @return {null}          [null]
  */
 function createClusterLens(cluster,map,lendomId){
 	//初始化zoommap
@@ -87,7 +99,7 @@ function createClusterLens(cluster,map,lendomId){
 	cluster.on('clustermouseover', function (e) {
 
 		var point = map.latLngToContainerPoint(e.latlng);
-
+		$(zl).show();
 		//获取当前的markers
 		var clickMarkers = e.layer.getAllChildMarkers();
 		//移除lens中的marker
@@ -112,10 +124,24 @@ function createClusterLens(cluster,map,lendomId){
 	    //设置zoommap的显示区域
 	    zoommap.setView(e.latlng, map.getZoom() + 1, true);
 	});
-}
 
+	cluster.on('clusterlayerremove',function(e){
+		console.log(e);
+	});
+	// var originRemove = cluster.onRemove;
+	// cluster.onRemove=function(){
+	// 	originRemove();
+	// 	console.log('3');
+	// }
+}
+/**
+ * create HeatMap
+ * @param  {Array} data [like [[lat,lon,value],[lat,lon,value],...] ]
+ * @return {[Object]}      [heatLayer]
+ */
 function createHeatMap(data){
 	var heat = L.heatLayer(data, {radius: 25});
 	return heat;
 }
+
 export { poiVisMap }
