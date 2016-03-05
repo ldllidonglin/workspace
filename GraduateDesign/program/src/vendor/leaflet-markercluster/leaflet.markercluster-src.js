@@ -454,7 +454,9 @@ L.MarkerClusterGroup = L.FeatureGroup.extend({
 
 	//Overrides FeatureGroup.onAdd
 	onAdd: function (map) {
+
 		this._map = map;
+		this._hideMarkers();
 		var i, l, layer;
 
 		if (!isFinite(this._map.getMaxZoom())) {
@@ -499,7 +501,14 @@ L.MarkerClusterGroup = L.FeatureGroup.extend({
 		map.off('moveend', this._moveEnd, this);
 
 		this._unbindEvents();
-		console.log(this.getLayers());
+
+		var markers = this.getLayers();
+		this._map.markers = markers;
+		if(this._map.getZoom()>15){
+			this._showMarkers();
+			map.on('dragend',this._showMarkers);
+		}
+		
 
 		//In case we are in a cluster animation
 		this._map._mapPane.className = this._map._mapPane.className.replace(' leaflet-cluster-anim', '');
@@ -517,7 +526,25 @@ L.MarkerClusterGroup = L.FeatureGroup.extend({
 
 		this._featureGroup.clearLayers();
 
-		this._map = null;
+		//this._map = null;
+	},
+	_showMarkers:function(){
+		map = this._map?this._map:this;
+		var markers = map.markers;
+		for(var i in markers){
+			var bounds = map.getBounds();
+			var marker = markers[i];
+			if(bounds.contains(marker._latlng)){
+				markers[i].addTo(map);
+			}	
+		}
+	},
+	_hideMarkers:function(){
+		var markers = this.getLayers();
+		for(var i in markers){
+			this._map.removeLayer(markers[i]);
+		}
+		this._map.off('dragend',this._showMarkers);
 	},
 
 	getVisibleParent: function (marker) {

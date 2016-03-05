@@ -20,9 +20,47 @@ function weiboTextMap(domId){
  */
 function initMap(domId){
     L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
-    var map = L.mapbox.map(domId, 'mapbox.light')
-        .setView([30.608623,114.274462], 11);
+    var layer = L.mapbox.tileLayer('mapbox.streets');
+    var layer_satelite = L.mapbox.tileLayer('mapbox.streets-satellite');
+    var map = L.mapbox.map(domId).setView([30.608623,114.274462], 11);
+    var baseLayers = {
+        "实时": layer.addTo(map),
+        "话题热度": layer_satelite
+    };
+
+    L.control.layers(baseLayers).addTo(map);
+    map.on('baselayerchange',baseLyaerChange);
     return map;
+}
+
+function baseLyaerChange(event){
+    if(event.name == '话题热度'){
+        $("#map").hide();
+        $("#map-3d").show();
+        weiboVis3D("map-3d");
+    }
+}
+
+function weiboVis3D(domId){
+    var container = document.getElementById(domId);
+    var globe = new DAT.Globe(container);
+    $.get("http://202.114.123.53/zx/aqi/getAQICityList.php")
+    .then(function(data){
+        data = JSON.parse(data);
+        var mapdata=[];
+        mapdata['1990']=[];
+        for(var i in data){
+            var city=data[i];
+            mapdata['1990'].push(city.lat);
+            mapdata['1990'].push(city.lon);
+            mapdata['1990'].push(Math.random()-0.6);
+        }
+        globe.addData( mapdata['1990'], {format: 'magnitude', name: '1990'} );
+        // Create the geometry
+        globe.createPoints();
+        // Begin animation
+        globe.animate();
+    });
 }
 
 /**

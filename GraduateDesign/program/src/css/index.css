@@ -32,6 +32,7 @@ header{
 }
 #main{
 	margin-top: 10px;
+	margin-bottom: auto;
 	height: 100%;
 	position: relative;
 }
@@ -39,6 +40,10 @@ header{
 	height: 100%;
 	#map {
 		height: 100%;
+	}
+	#map-3d {
+		height: 100%;
+		display: none;
 	}
 	#bdmap{
 		height: 100%;
@@ -142,4 +147,10 @@ header{
 		border-radius: 50%;
 	}
 	
+}
+
+input.leaflet-control-layers-selector{
+	left:auto !important;
+	visibility: visible !important;
+	position: relative !important;
 }
