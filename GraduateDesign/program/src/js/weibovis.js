@@ -103,8 +103,14 @@ function handleWeiboData(data,map,idfArray){
 	}
     //绑定tooltip
     markers.on("clustermouseover",showWeiboDetail);
-    markers.on("clustermouseout",hideWeiboDetail)
+    //markers.on("clustermouseout",hideWeiboDetail)
     map.addLayer(markers);
+    map.on("mouseover",function(e){
+        $("#tooltip").hide();
+    });
+    map.on("mouseout",function(e){
+       $("#tooltip").hide();
+    });
 }
 
 
@@ -160,6 +166,7 @@ function showWeiboDetail(e){
 
 }
 function hideWeiboDetail(e){
+    console.log("hide");
     $("#tooltip").hide();
 }
 

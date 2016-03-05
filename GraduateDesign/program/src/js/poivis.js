@@ -16,7 +16,7 @@ function poiVisMap(domId){
 			points.push([lat,lon]);
 			heatMapPoint.push([lat,lon,100.0]);
 		}
-
+		console.log(points.length);
 		var heatMap = createHeatMap(heatMapPoint);
 		map.addLayer(heatMap);
 		
@@ -33,13 +33,15 @@ function poiVisMap(domId){
 			if(current_level <= 12){
 				map.addLayer(heatMap);
 				map.removeLayer(cluster);
+				$('#zoomlens').hide();
 			}
-			else if(current_level > 12){
+			else if(current_level > 12 && current_level <= 15){
 				map.removeLayer(heatMap);
 				map.addLayer(cluster);
 			}else if(current_level > 15){
 				map.removeLayer(heatMap);
 				map.removeLayer(cluster);
+				$('#zoomlens').hide();
 			}
 		});
 
@@ -94,7 +96,7 @@ function createClusterLens(cluster,map,lendomId){
 	    attributionControl: false
 	});
 	
-	var oldLayer=[];;
+	var oldLayer=[];
 	var zl = document.getElementById(lendomId);
 	cluster.on('clustermouseover', function (e) {
 
@@ -102,15 +104,16 @@ function createClusterLens(cluster,map,lendomId){
 		$(zl).show();
 		//获取当前的markers
 		var clickMarkers = e.layer.getAllChildMarkers();
+
 		//移除lens中的marker
 		for(var m in oldLayer){
-			var marker = oldLayer[m];
-			zoommap.removeLayer(marker);
+			var old_marker = oldLayer[m];
+			zoommap.removeLayer(old_marker);
 		}
 		oldLayer=[];
 		//把当前的marker加入lens、oldLayer以备删除
-		for(var m in clickMarkers){
-			var marker = clickMarkers[m];
+		for(var i in clickMarkers){
+			var marker = clickMarkers[i];
 			var latlng = marker._latlng;
 			var zoomMarker = L.marker(latlng, {
 		        icon: L.mapbox.marker.icon({'marker-symbol': 'post', 'marker-color': '0044FF'})

@@ -499,6 +499,7 @@ L.MarkerClusterGroup = L.FeatureGroup.extend({
 		map.off('moveend', this._moveEnd, this);
 
 		this._unbindEvents();
+		console.log(this.getLayers());
 
 		//In case we are in a cluster animation
 		this._map._mapPane.className = this._map._mapPane.className.replace(' leaflet-cluster-anim', '');
