@@ -143,7 +143,16 @@ function createClusterLens(cluster,map,lendomId){
  * @return {[Object]}      [heatLayer]
  */
 function createHeatMap(data){
-	var heat = L.heatLayer(data, {radius: 25});
+	var gradient = {
+		0.5:'#c7f127',
+		0.55:'#daf127',
+		0.6:'#f3f73b',
+		0.7:'#FBEF0E',
+		0.8:'#FFD700',
+		0.98:'#f48e1a',
+		1:'red'
+	};
+	var heat = L.heatLayer(data, {radius:15,gradient:gradient});
 	return heat;
 }
 

@@ -233,61 +233,136 @@ function createClusterLens(cluster, map, lendomId) {
  * @return {[Object]}      [heatLayer]
  */
 function createHeatMap(data) {
-	var heat = L.heatLayer(data, { radius: 25 });
+	var gradient = {
+		0.5: '#c7f127',
+		0.55: '#daf127',
+		0.6: '#f3f73b',
+		0.7: '#FBEF0E',
+		0.8: '#FFD700',
+		0.98: '#f48e1a',
+		1: 'red'
+	};
+	var heat = L.heatLayer(data, { radius: 15, gradient: gradient });
 	return heat;
 }
 
 exports.poiVisMap = poiVisMap;
 
 },{}],4:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+
+var _marked = [visChartGenerator].map(regeneratorRuntime.mark);
+
 function taxiVisChart(domId) {
-	var myChart = echarts.init(document.getElementById(domId));
-	myChart.showLoading();
-	$.get("http://202.114.123.53/zx/taxi/getGeojson.php", { 'city': '武汉市' }).then(function (data) {
+	var g = visChartGenerator(domId);
+	g.next();
+	window.g = g;
+}
 
-		//注册map
-		echarts.registerMap('wuhan', JSON.parse(data));
+function visChartGenerator(domId) {
+	var myChart, wuhan_map, wuhan_od;
+	return regeneratorRuntime.wrap(function visChartGenerator$(_context) {
+		while (1) {
+			switch (_context.prev = _context.next) {
+				case 0:
+					//Initialize
+					myChart = echarts.init(document.getElementById(domId));
 
-		$.get("http://202.114.123.53/zx/taxi/getAllOdDataM.php").then(function (data) {
-			var taxi_data = JSON.parse(data);
+					myChart.showLoading();
+					//get geojson of wuhan
+					_context.next = 4;
+					return getGeojson("武汉市");
 
-			var draw_data = {};
+				case 4:
+					wuhan_map = _context.sent;
 
-			//统计轨迹
-			for (var i = 0, length = taxi_data.length; i < length; i++) {
-				var start_point = taxi_data[i];
+					echarts.registerMap('wuhan', wuhan_map);
+					//get od-data of wuhan
+					_context.next = 8;
+					return getODData();
 
-				if (start_point.state !== 0) {
-					continue;
-				}
+				case 8:
+					wuhan_od = _context.sent;
 
-				if (i >= length - 1) {
-					break;
-				}
-				var end_point = taxi_data[i + 1];
-				if (start_point.district === '' || end_point.district === '') {
-					continue;
-				}
-				if (draw_data[start_point.district]) {
-					if (draw_data[start_point.district][end_point.district]) {
-						draw_data[start_point.district][end_point.district] += 1;
-					} else {
-						draw_data[start_point.district][end_point.district] = 1;
-					}
-				} else {
-					draw_data[start_point.district] = {};
-				}
+					//get chart
+					taxiEchartsMap(wuhan_od, myChart);
 
-				i++;
+				case 10:
+				case "end":
+					return _context.stop();
 			}
-			console.log(draw_data);
-			taxiEchartsMap(draw_data, myChart);
-		});
+		}
+	}, _marked[0], this);
+}
+
+function getJSON(url, param) {
+	var promise = new Promise(function (resolve, reject) {
+		var client = new XMLHttpRequest();
+		client.open("GET", url);
+		client.onreadystatechange = handler;
+		client.responseType = "json";
+		client.setRequestHeader("Accept", "application/json");
+		client.send(param);
+
+		function handler() {
+			if (this.readyState !== 4) {
+				return;
+			}
+			if (this.status === 200) {
+				resolve(this.response);
+			} else {
+				reject(new Error(this.statusText));
+			}
+		};
+	});
+	return promise;
+}
+
+function getGeojson(city) {
+	getJSON("http://202.114.123.53/zx/taxi/getGeojson.php", { 'city': city }).then(function (data) {
+		g.next(data);
+	});
+}
+
+function getODData() {
+	getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php").then(function (data) {
+		var taxi_data = data;
+
+		var draw_data = {};
+
+		//calculate in/out between two district
+		for (var i = 0, length = taxi_data.length; i < length; i++) {
+			var start_point = taxi_data[i];
+
+			if (start_point.state !== 0) {
+				continue;
+			}
+
+			if (i >= length - 1) {
+				break;
+			}
+			var end_point = taxi_data[i + 1];
+			if (start_point.district === '' || end_point.district === '') {
+				continue;
+			}
+			if (draw_data[start_point.district]) {
+				if (draw_data[start_point.district][end_point.district]) {
+					draw_data[start_point.district][end_point.district] += 1;
+				} else {
+					draw_data[start_point.district][end_point.district] = 1;
+				}
+			} else {
+				draw_data[start_point.district] = {};
+			}
+
+			i++;
+		}
+		console.log(draw_data);
+		g.next(draw_data);
 	});
 }
 
@@ -357,13 +432,13 @@ function taxiEchartsMap(data, myChart) {
 					"featureType": "water",
 					"elementType": "all",
 					"stylers": {
-						"color": "#044161"
+						"color": "#134f5c"
 					}
 				}, {
 					"featureType": "land",
 					"elementType": "all",
 					"stylers": {
-						"color": "#004981"
+						"color": "#444444"
 					}
 				}, {
 					"featureType": "boundary",
@@ -381,14 +456,14 @@ function taxiEchartsMap(data, myChart) {
 					"featureType": "highway",
 					"elementType": "geometry",
 					"stylers": {
-						"color": "#004981"
+						"color": "#3d85c6",
+						"lightness": -53
 					}
 				}, {
 					"featureType": "highway",
 					"elementType": "geometry.fill",
 					"stylers": {
-						"color": "#005b96",
-						"lightness": 1
+						"color": "#76a5af"
 					}
 				}, {
 					"featureType": "highway",
@@ -400,13 +475,14 @@ function taxiEchartsMap(data, myChart) {
 					"featureType": "arterial",
 					"elementType": "geometry",
 					"stylers": {
-						"color": "#004981"
+						"color": "#33707d"
 					}
 				}, {
 					"featureType": "arterial",
 					"elementType": "geometry.fill",
 					"stylers": {
-						"color": "#00508b"
+						"color": "#45818e",
+						"lightness": -56
 					}
 				}, {
 					"featureType": "poi",
@@ -503,7 +579,6 @@ function taxiEchartsMap(data, myChart) {
 			},
 			lineStyle: {
 				normal: {
-					color: '#a6c84c',
 					width: 1,
 					opacity: 0.4,
 					curveness: 0.2
@@ -524,8 +599,7 @@ function taxiEchartsMap(data, myChart) {
 			},
 			lineStyle: {
 				normal: {
-					color: '#a6c84c',
-					width: 0,
+					width: 1,
 					curveness: 0.2
 				}
 			},
@@ -560,6 +634,11 @@ function taxiEchartsMap(data, myChart) {
 	option.series = series;
 	myChart.setOption(option);
 	myChart.hideLoading();
+	myChart.on("bmapRoam", function (e) {
+		if (e.level > 13) {}
+	});
+	console.log(myChart.getOption());
+	console.log(myChart);
 }
 
 exports.taxiVisChart = taxiVisChart;
@@ -969,4 +1048,4 @@ exports.weiboTextMap = weiboTextMap;
 
 
 
-//# sourceMappingURL=bundle.js.b06b8dd3.map
+//# sourceMappingURL=bundle.js.5673e4f7.map
