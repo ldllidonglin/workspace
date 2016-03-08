@@ -1,8 +1,9 @@
 function layoutIni(){
-	var clientHeight=document.body.clientHeight;
-	var headerHeight=$("header").height();
-	var mainHeight=clientHeight-headerHeight-15;
+	var clientHeight = document.body.clientHeight;
+	var navHeight = $("nav").height();
+	var mainHeight = clientHeight-navHeight-15;
 	$("#main").height(mainHeight);
+	
 }
 
 export {layoutIni}

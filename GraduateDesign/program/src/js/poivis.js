@@ -1,53 +1,81 @@
-/**
- * POI Visualization Map
- * @param  {[String]} domId [id of map's container]
- * @return {[null]}       [null]
- */
-function poiVisMap(domId){
-	var map=initMap(domId);
-	$.get("http://202.114.123.53/zx/weibo/getWeiboData.php",{'city':'武汉'}).then(function(data){
-		data = JSON.parse(data);
-		var points = [];
-		var heatMapPoint = [];
-		for(var x in data){
-			var item=data[x];
-			var lat=item.geo.coordinates[0];
-			var lon=item.geo.coordinates[1];
-			points.push([lat,lon]);
-			heatMapPoint.push([lat,lon,100.0]);
-		}
-		console.log(points.length);
-		var heatMap = createHeatMap(heatMapPoint);
-		map.addLayer(heatMap);
-		
-		var cluster = createCluster(points);
-		cluster.on('layerremove',function(e){
-			console.log('heat');
-		});
-
-		createClusterLens(cluster,map,'zoomlens');
-
-		map.on('zoomend',function(e){
-			var current_level = e.target.getZoom();
-			console.log(current_level);
-			if(current_level <= 12){
-				map.addLayer(heatMap);
-				map.removeLayer(cluster);
-				$('#zoomlens').hide();
+class PoiVisMap {
+	constructor(domId){
+		this.domId = domId;
+        $("#"+domId).show();
+        var map=initMap(domId);
+		$.get("http://202.114.123.53/zx/weibo/getWeiboData.php",{'city':'武汉'})
+		 .then(function(data){
+			data = JSON.parse(data);
+			var points = [];
+			var heatMapPoint = [];
+			for(var x in data){
+				var item=data[x];
+				var lat=item.geo.coordinates[0];
+				var lon=item.geo.coordinates[1];
+				points.push([lat,lon]);
+				heatMapPoint.push([lat,lon,100.0]);
 			}
-			else if(current_level > 12 && current_level <= 15){
-				map.removeLayer(heatMap);
-				map.addLayer(cluster);
-			}else if(current_level > 15){
-				map.removeLayer(heatMap);
-				map.removeLayer(cluster);
-				$('#zoomlens').hide();
-			}
-		});
+			console.log(points.length);
+			var heatMap = createHeatMap(heatMapPoint);
+			map.addLayer(heatMap);
+			
+			var cluster = createCluster(points);
+			cluster.on('layerremove',function(e){
+				console.log('heat');
+			});
 
-	});
+			createClusterLens(cluster,map,'zoomlens');
+
+			map.on('zoomend',function(e){
+				var current_level = e.target.getZoom();
+				console.log(current_level);
+				if(current_level <= 12){
+					map.addLayer(heatMap);
+					map.removeLayer(cluster);
+					$('#zoomlens').hide();
+				}
+				else if(current_level > 12 && current_level <= 15){
+					map.removeLayer(heatMap);
+					map.addLayer(cluster);
+				}else if(current_level > 15){
+					map.removeLayer(heatMap);
+					map.removeLayer(cluster);
+					$('#zoomlens').hide();
+				}
+			});
+
+		});
+	}
+	show(){
+        $("#"+this.domId).show();
+    }
+    hide(){
+        $("#"+this.domId).hide();
+    }
 }
 
+function getJSON(url,param){
+	var promise = new Promise(function(resolve, reject){
+	    var client = new XMLHttpRequest();
+	    client.open("GET", url);
+	    client.onreadystatechange = handler;
+	    client.responseType = "json";
+	    client.setRequestHeader("Accept", "application/json");
+	    client.send(param);
+
+	    function handler() {
+	      if ( this.readyState !== 4 ) {
+	        return;
+	      }
+	      if (this.status === 200) {
+	        resolve(this.response);
+	      } else {
+	        reject(new Error(this.statusText));
+	      }
+	    };
+	});
+  	return promise;
+}
 /**
  * initialize the map
  * @param  {[String]} domId [id of map's container]
@@ -156,4 +184,4 @@ function createHeatMap(data){
 	return heat;
 }
 
-export { poiVisMap }
+export { PoiVisMap }

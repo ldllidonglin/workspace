@@ -23,12 +23,8 @@ html,body{
 	margin: 0;
 	padding: 0;
 }
-header{
-	background-color: #4db6ac;
-	text-align: center;
-	height: 70px;
-	line-height: 70px;
-	font-size: 20px;
+nav{
+	background-color: #26a69a;
 }
 #main{
 	margin-top: 10px;
@@ -38,18 +34,21 @@ header{
 }
 #map-container{
 	height: 100%;
-	#map {
-		height: 100%;
-	}
-	#map-3d {
+	#weibo-text-map {
 		height: 100%;
 		display: none;
 	}
-	#bdmap{
+	#weibo-event-map {
 		height: 100%;
+		display: none;
 	}
-	#bdmap-t{
+	#poi-vis-map{
 		height: 100%;
+		display: none;
+	}
+	#trajectory-vis-container{
+		height: 100%;
+		display: none;
 	}
 }
 #tool-container{

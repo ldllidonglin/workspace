@@ -1,65 +1,80 @@
-import {weiboTextMap} from './weibovis.js';
-import {layoutIni} from './layout.js';
-import {verticalTap} from './vertical-tab.js';
-import {taxiVisChart} from './taxiVis.js';
-import {poiVisMap} from './poivis.js';
+import { WeiboTextMap,Event3DMap } from './weibovis.js';
+import { layoutIni } from './layout.js';
+import { TaxiVisChart } from './taxiVis.js';
+import { PoiVisMap } from './poivis.js';
 
 
-var iniObj={
-    'weibo':0,
-    'poi':0,
-    'taxi':0
+let INITOBJ={
+    'textmap':0,
+    'eventmap':0,
+    'poimap':0,
+    'taxichart':0
 };
 
-weiboTextMap("map");
-iniObj.weibo = 1;
 
-/**
- * 左侧栏响应函数
- * @param  {[obj]} event [事件]
- * @return {[null]}       [null]
- */
-function toolTapClick (event) {
+//weibo-vis dropdown-button initialize
+$("#textvis-list").on("click",e =>{
     switch(event.target.id){
-        case "weibo-vis":
-            if(!iniObj.weibo){
-              weiboTextMap("map");
-              iniObj.weibo = 1;
+        case "weibo-text-vis":
+            if(INITOBJ.textmap){
+                cleanMainWindow();
+                INITOBJ.textmap.show();
+            }else{
+                var text_map = new WeiboTextMap("weibo-text-map");
+                INITOBJ.textmap = text_map;
             }
             break;
+        case "weibo-event-vis":
+            if(INITOBJ.eventmap){
+                cleanMainWindow();
+                INITOBJ.eventmap.show();
+            }else{
+                var event_map = new Event3DMap("weibo-event-map");
+                INITOBJ.eventmap = event_map;
+            }
+           
+            break;
+    }
+});
+
+//spatial-vis dropdown-button initialize
+$("#spatialvis-list").on("click",e =>{
+    switch(event.target.id){
         case "poi-vis":
-            if(!iniObj.poi){
-                poiVisMap('bdmap');
-                iniObj.poi = 1;
-            }
-            break;
-        case "taxi-vis":
-            if(!iniObj.taxi){
-               taxiVisChart('bdmap-t');
-               iniObj.taxi = 1; 
+            if(INITOBJ.poimap){
+                cleanMainWindow();
+                INITOBJ.poimap.show();
+            }else{
+                var poi_map = new PoiVisMap("poi-vis-map");
+                INITOBJ.poimap = poi_map;
             }
             break;
     }
-}
-//初始化左侧栏
-verticalTap("tool-container",toolTapClick);
-//初始化主窗口布局
-layoutIni();
+});
 
-//初始化主图
-// var source=new ol.source.OSM();
-// var baseLayer=new ol.layer.Tile({
-//     source:source
-// });
-// var attribution = new ol.control.Attribution({
-//     collapsible: false
-//   });
-// var ol_map=new ol.Map({
-//     layers:[baseLayer],
-//     target: 'map',
-//     controls: ol.control.defaults({ attribution: false }).extend([attribution]),
-//     view: new ol.View({
-//       center: ol.proj.fromLonLat([116.5, 39.92]),
-//       zoom: 10
-//     })
-//  });
+//time-vis dropdown-button initialize
+$("#timevis-list").on("click",e =>{
+    switch(event.target.id){
+        case "trajectory-vis":
+            if(INITOBJ.taxichart){
+                cleanMainWindow();
+                INITOBJ.taxichart.show();
+            }else{
+                var taxichart = new TaxiVisChart("trajectory-vis-container");
+                INITOBJ.taxichart = taxichart;
+            }
+            break;
+    }
+});
+
+
+
+function cleanMainWindow(){
+    for(let name in INITOBJ){
+        if(INITOBJ[name]){
+            INITOBJ[name].hide();
+        }
+    }
+}
+//main window initialize
+layoutIni();

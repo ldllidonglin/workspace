@@ -19,7 +19,7 @@ import del from 'del';
 import precss from 'precss';
 import jshint from 'gulp-jshint';
 
-var watcher = gulp.watch(['src/**/*.*','src/index.html'], ['rev']);
+var watcher = gulp.watch(['src/css/index.css','src/js/poivis.js','src/js/taxivis.js','src/js/weibovis.js','src/js/index.js','src/index.html'], ['rev']);
 
 watcher.on('change', (event)=> {
   console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');

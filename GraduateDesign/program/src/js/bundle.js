@@ -5,72 +5,83 @@ var _weibovis = require('./weibovis.js');
 
 var _layout = require('./layout.js');
 
-var _verticalTab = require('./vertical-tab.js');
-
 var _taxiVis = require('./taxiVis.js');
 
 var _poivis = require('./poivis.js');
 
-var iniObj = {
-    'weibo': 0,
-    'poi': 0,
-    'taxi': 0
+var INITOBJ = {
+    'textmap': 0,
+    'eventmap': 0,
+    'poimap': 0,
+    'taxichart': 0
 };
 
-(0, _weibovis.weiboTextMap)("map");
-iniObj.weibo = 1;
-
-/**
- * 左侧栏响应函数
- * @param  {[obj]} event [事件]
- * @return {[null]}       [null]
- */
-function toolTapClick(event) {
+//weibo-vis dropdown-button initialize
+$("#textvis-list").on("click", function (e) {
     switch (event.target.id) {
-        case "weibo-vis":
-            if (!iniObj.weibo) {
-                (0, _weibovis.weiboTextMap)("map");
-                iniObj.weibo = 1;
+        case "weibo-text-vis":
+            if (INITOBJ.textmap) {
+                cleanMainWindow();
+                INITOBJ.textmap.show();
+            } else {
+                var text_map = new _weibovis.WeiboTextMap("weibo-text-map");
+                INITOBJ.textmap = text_map;
             }
             break;
+        case "weibo-event-vis":
+            if (INITOBJ.eventmap) {
+                cleanMainWindow();
+                INITOBJ.eventmap.show();
+            } else {
+                var event_map = new _weibovis.Event3DMap("weibo-event-map");
+                INITOBJ.eventmap = event_map;
+            }
+
+            break;
+    }
+});
+
+//spatial-vis dropdown-button initialize
+$("#spatialvis-list").on("click", function (e) {
+    switch (event.target.id) {
         case "poi-vis":
-            if (!iniObj.poi) {
-                (0, _poivis.poiVisMap)('bdmap');
-                iniObj.poi = 1;
-            }
-            break;
-        case "taxi-vis":
-            if (!iniObj.taxi) {
-                (0, _taxiVis.taxiVisChart)('bdmap-t');
-                iniObj.taxi = 1;
+            if (INITOBJ.poimap) {
+                cleanMainWindow();
+                INITOBJ.poimap.show();
+            } else {
+                var poi_map = new _poivis.PoiVisMap("poi-vis-map");
+                INITOBJ.poimap = poi_map;
             }
             break;
     }
+});
+
+//time-vis dropdown-button initialize
+$("#timevis-list").on("click", function (e) {
+    switch (event.target.id) {
+        case "trajectory-vis":
+            if (INITOBJ.taxichart) {
+                cleanMainWindow();
+                INITOBJ.taxichart.show();
+            } else {
+                var taxichart = new _taxiVis.TaxiVisChart("trajectory-vis-container");
+                INITOBJ.taxichart = taxichart;
+            }
+            break;
+    }
+});
+
+function cleanMainWindow() {
+    for (var name in INITOBJ) {
+        if (INITOBJ[name]) {
+            INITOBJ[name].hide();
+        }
+    }
 }
-//初始化左侧栏
-(0, _verticalTab.verticalTap)("tool-container", toolTapClick);
-//初始化主窗口布局
+//main window initialize
 (0, _layout.layoutIni)();
 
-//初始化主图
-// var source=new ol.source.OSM();
-// var baseLayer=new ol.layer.Tile({
-//     source:source
-// });
-// var attribution = new ol.control.Attribution({
-//     collapsible: false
-//   });
-// var ol_map=new ol.Map({
-//     layers:[baseLayer],
-//     target: 'map',
-//     controls: ol.control.defaults({ attribution: false }).extend([attribution]),
-//     view: new ol.View({
-//       center: ol.proj.fromLonLat([116.5, 39.92]),
-//       zoom: 10
-//     })
-//  });
-
-},{"./layout.js":2,"./poivis.js":3,"./taxiVis.js":4,"./vertical-tab.js":5,"./weibovis.js":6}],2:[function(require,module,exports){
+},{"./layout.js":2,"./poivis.js":3,"./taxiVis.js":4,"./weibovis.js":5}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -78,67 +89,109 @@ Object.defineProperty(exports, "__esModule", {
 });
 function layoutIni() {
 	var clientHeight = document.body.clientHeight;
-	var headerHeight = $("header").height();
-	var mainHeight = clientHeight - headerHeight - 15;
+	var navHeight = $("nav").height();
+	var mainHeight = clientHeight - navHeight - 15;
 	$("#main").height(mainHeight);
 }
 
 exports.layoutIni = layoutIni;
 
 },{}],3:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-/**
- * POI Visualization Map
- * @param  {[String]} domId [id of map's container]
- * @return {[null]}       [null]
- */
-function poiVisMap(domId) {
-	var map = initMap(domId);
-	$.get("http://202.114.123.53/zx/weibo/getWeiboData.php", { 'city': '武汉' }).then(function (data) {
-		data = JSON.parse(data);
-		var points = [];
-		var heatMapPoint = [];
-		for (var x in data) {
-			var item = data[x];
-			var lat = item.geo.coordinates[0];
-			var lon = item.geo.coordinates[1];
-			points.push([lat, lon]);
-			heatMapPoint.push([lat, lon, 100.0]);
-		}
-		console.log(points.length);
-		var heatMap = createHeatMap(heatMapPoint);
-		map.addLayer(heatMap);
 
-		var cluster = createCluster(points);
-		cluster.on('layerremove', function (e) {
-			console.log('heat');
-		});
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-		createClusterLens(cluster, map, 'zoomlens');
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-		map.on('zoomend', function (e) {
-			var current_level = e.target.getZoom();
-			console.log(current_level);
-			if (current_level <= 12) {
-				map.addLayer(heatMap);
-				map.removeLayer(cluster);
-				$('#zoomlens').hide();
-			} else if (current_level > 12 && current_level <= 15) {
-				map.removeLayer(heatMap);
-				map.addLayer(cluster);
-			} else if (current_level > 15) {
-				map.removeLayer(heatMap);
-				map.removeLayer(cluster);
-				$('#zoomlens').hide();
+var PoiVisMap = (function () {
+	function PoiVisMap(domId) {
+		_classCallCheck(this, PoiVisMap);
+
+		this.domId = domId;
+		$("#" + domId).show();
+		var map = initMap(domId);
+		$.get("http://202.114.123.53/zx/weibo/getWeiboData.php", { 'city': '武汉' }).then(function (data) {
+			data = JSON.parse(data);
+			var points = [];
+			var heatMapPoint = [];
+			for (var x in data) {
+				var item = data[x];
+				var lat = item.geo.coordinates[0];
+				var lon = item.geo.coordinates[1];
+				points.push([lat, lon]);
+				heatMapPoint.push([lat, lon, 100.0]);
 			}
-		});
-	});
-}
+			console.log(points.length);
+			var heatMap = createHeatMap(heatMapPoint);
+			map.addLayer(heatMap);
 
+			var cluster = createCluster(points);
+			cluster.on('layerremove', function (e) {
+				console.log('heat');
+			});
+
+			createClusterLens(cluster, map, 'zoomlens');
+
+			map.on('zoomend', function (e) {
+				var current_level = e.target.getZoom();
+				console.log(current_level);
+				if (current_level <= 12) {
+					map.addLayer(heatMap);
+					map.removeLayer(cluster);
+					$('#zoomlens').hide();
+				} else if (current_level > 12 && current_level <= 15) {
+					map.removeLayer(heatMap);
+					map.addLayer(cluster);
+				} else if (current_level > 15) {
+					map.removeLayer(heatMap);
+					map.removeLayer(cluster);
+					$('#zoomlens').hide();
+				}
+			});
+		});
+	}
+
+	_createClass(PoiVisMap, [{
+		key: "show",
+		value: function show() {
+			$("#" + this.domId).show();
+		}
+	}, {
+		key: "hide",
+		value: function hide() {
+			$("#" + this.domId).hide();
+		}
+	}]);
+
+	return PoiVisMap;
+})();
+
+function getJSON(url, param) {
+	var promise = new Promise(function (resolve, reject) {
+		var client = new XMLHttpRequest();
+		client.open("GET", url);
+		client.onreadystatechange = handler;
+		client.responseType = "json";
+		client.setRequestHeader("Accept", "application/json");
+		client.send(param);
+
+		function handler() {
+			if (this.readyState !== 4) {
+				return;
+			}
+			if (this.status === 200) {
+				resolve(this.response);
+			} else {
+				reject(new Error(this.statusText));
+			}
+		};
+	});
+	return promise;
+}
 /**
  * initialize the map
  * @param  {[String]} domId [id of map's container]
@@ -246,7 +299,7 @@ function createHeatMap(data) {
 	return heat;
 }
 
-exports.poiVisMap = poiVisMap;
+exports.PoiVisMap = PoiVisMap;
 
 },{}],4:[function(require,module,exports){
 "use strict";
@@ -255,43 +308,94 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
 var _marked = [visChartGenerator].map(regeneratorRuntime.mark);
 
-function taxiVisChart(domId) {
-	var g = visChartGenerator(domId);
-	g.next();
-	window.g = g;
-}
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var TaxiVisChart = (function () {
+	function TaxiVisChart(domId) {
+		_classCallCheck(this, TaxiVisChart);
+
+		this.domId = domId;
+		$("#" + domId).show();
+		var g = visChartGenerator(domId);
+		g.next();
+		window.g = g;
+	}
+
+	_createClass(TaxiVisChart, [{
+		key: "show",
+		value: function show() {
+			$("#" + this.domId).show();
+		}
+	}, {
+		key: "hide",
+		value: function hide() {
+			$("#" + this.domId).hide();
+		}
+	}]);
+
+	return TaxiVisChart;
+})();
+// function taxiVisChart(domId){
+
+// }
 
 function visChartGenerator(domId) {
-	var myChart, wuhan_map, wuhan_od;
+	var container, rowdiv, passChartDom, flowChartDom, wuhan_map, wuhan_od, result_data, flowChart, passChart;
 	return regeneratorRuntime.wrap(function visChartGenerator$(_context) {
 		while (1) {
 			switch (_context.prev = _context.next) {
 				case 0:
-					//Initialize
-					myChart = echarts.init(document.getElementById(domId));
+					container = document.getElementById(domId);
+					rowdiv = document.createElement("div");
 
-					myChart.showLoading();
+					rowdiv.className = 'row';
+					//Initialize
+					passChartDom = document.createElement('div');
+
+					passChartDom.style.width = '500px';
+					passChartDom.style.height = '600px';
+					passChartDom.id = 'taxi-pass-chart';
+					passChartDom.className = 'col s4';
+					rowdiv.appendChild(passChartDom);
+
+					flowChartDom = document.createElement('div');
+
+					flowChartDom.style.width = '500px';
+					flowChartDom.style.height = '600px';
+					flowChartDom.id = 'taxi-flow-chart';
+					flowChartDom.className = 'col s4';
+					rowdiv.appendChild(flowChartDom);
+					container.appendChild(rowdiv);
+
 					//get geojson of wuhan
-					_context.next = 4;
+					_context.next = 18;
 					return getGeojson("武汉市");
 
-				case 4:
+				case 18:
 					wuhan_map = _context.sent;
 
 					echarts.registerMap('wuhan', wuhan_map);
 					//get od-data of wuhan
-					_context.next = 8;
+					_context.next = 22;
 					return getODData();
 
-				case 8:
+				case 22:
 					wuhan_od = _context.sent;
+					result_data = processODData(wuhan_od);
 
-					//get chart
-					taxiEchartsMap(wuhan_od, myChart);
+					//get Flowchart
 
-				case 10:
+					flowChart = taxiFlowChart(flowChartDom, result_data['limes'], result_data['points']);
+
+					//get PassOutChart
+
+					passChart = taxiPassOutChart(passChartDom, result_data['in'], result_data['out'], flowChart);
+
+				case 26:
 				case "end":
 					return _context.stop();
 			}
@@ -357,6 +461,7 @@ function getODData() {
 				}
 			} else {
 				draw_data[start_point.district] = {};
+				draw_data[start_point.district][end_point.district] = 1;
 			}
 
 			i++;
@@ -366,23 +471,8 @@ function getODData() {
 	});
 }
 
-function taxiEchartsMap(data, myChart) {
+function processODData(data) {
 	var districtLonLat = {
-		"海淀区": [116.299059, 39.966493],
-		"朝阳区": [116.479583, 39.963396],
-		"东城区": [116.419217, 39.937289],
-		"丰台区": [116.29101, 39.86511],
-		"通州区": [116.661831, 39.917813],
-		"石景山区": [116.22317, 39.9125],
-		"门头沟区": [116.107037, 39.948353],
-		"西城区": [116.369199, 39.918698],
-		"房山区": [116.147856, 39.754701],
-		"大兴区": [116.147856, 39.754701],
-		"昌平区": [116.237831, 40.227662],
-		"顺义区": [116.659819, 40.136379],
-		"怀柔区": [116.637972, 40.322782]
-	};
-	districtLonLat = {
 		"江汉区": [114.274462, 30.608623],
 		"武昌区": [114.320455, 30.56087],
 		"青山区": [114.39275, 30.630875],
@@ -397,6 +487,57 @@ function taxiEchartsMap(data, myChart) {
 		"新洲区": [114.807983, 30.848025],
 		"汉南区": [114.193972, 30.479202]
 	};
+	function getDistrictIn(district) {
+		var value = 0;
+		for (var name in data) {
+			if (name != district) {
+				for (var inname in data[name]) {
+					if (inname === district) {
+						value += data[name][district];
+					}
+				}
+			}
+		}
+		return value;
+	}
+
+	var temp_markline_data = {};
+	var temp_point_data = {};
+	var taxi_region_in = []; //各区域车辆流入数量
+	var taxi_region_out = []; //各区域车辆流出数量
+	for (var name in data) {
+		var temp_lime = [];
+		var temp_point = [];
+		var item = data[name];
+
+		var out_num = 0;
+
+		for (var name2 in item) {
+			if (name2 != name) {
+				out_num += item[name2];
+				temp_lime.push([{ name: name, coord: districtLonLat[name], value: item[name2] }, { name: name2, coord: districtLonLat[name2], value: item[name2] }]);
+				temp_point.push({ name: name2, value: districtLonLat[name2].concat([item[name2]]) });
+			}
+		}
+
+		temp_markline_data[name] = temp_lime;
+		temp_point_data[name] = temp_point;
+
+		var in_num = getDistrictIn(name);
+		taxi_region_in.push(in_num);
+
+		taxi_region_out.push(out_num);
+	}
+	return {
+		"limes": temp_markline_data,
+		'points': temp_point_data,
+		'in': taxi_region_in,
+		'out': taxi_region_out
+	};
+}
+
+function taxiFlowChart(dom, linesData, pointsData) {
+
 	var option = {
 		backgroundColor: '#404a59',
 		title: {
@@ -554,20 +695,12 @@ function taxiEchartsMap(data, myChart) {
 		series: []
 	};
 	var series = [];
-	var planePath = 'path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705.06,1318.313z';
-	for (var n in data) {
-		option.legend.data.push(n);
-		var item = data[n];
-		var temp_markline_data = [];
-		var temp_point_data = [];
-		for (var v in item) {
-			if (v != n) {
-				temp_markline_data.push([{ name: n, coord: districtLonLat[n], value: item[v] }, { name: v, coord: districtLonLat[v], value: item[v] }]);
-				temp_point_data.push({ name: v, value: districtLonLat[v].concat([item[v]]) });
-			}
-		}
+	for (var name in linesData) {
+		option.legend.data.push(name);
+		var temp_markline_data = linesData[name];
+		var temp_point_data = pointsData[name];
 		series.push({
-			name: n,
+			name: name,
 			type: 'lines',
 			coordinateSystem: 'bmap',
 			effect: {
@@ -586,7 +719,7 @@ function taxiEchartsMap(data, myChart) {
 			},
 			data: temp_markline_data
 		}, {
-			name: n,
+			name: name,
 			type: 'lines',
 			coordinateSystem: 'bmap',
 			zlevel: 1,
@@ -605,7 +738,7 @@ function taxiEchartsMap(data, myChart) {
 			},
 			data: temp_markline_data
 		}, {
-			name: n,
+			name: name,
 			type: 'effectScatter',
 			coordinateSystem: 'bmap',
 			zlevel: 2,
@@ -631,154 +764,233 @@ function taxiEchartsMap(data, myChart) {
 			data: temp_point_data
 		});
 	}
+	var flowChart = echarts.init(dom);
 	option.series = series;
+	flowChart.setOption(option);
+	console.log(option);
+	return flowChart;
+}
+
+function taxiPassOutChart(dom, inData, outData, flowChart) {
+	var option = {
+		tooltip: {
+			trigger: 'axis',
+			axisPointer: { // 坐标轴指示器，坐标轴触发有效
+				type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+			}
+		},
+		legend: {
+			data: ['流入', '流出']
+		},
+		grid: {
+			left: '3%',
+			right: '4%',
+			bottom: '3%',
+			containLabel: true
+		},
+		xAxis: [{
+			type: 'category',
+			data: []
+		}],
+		yAxis: [{
+			type: 'value'
+		}],
+		series: []
+	};
+	option.series.push({
+		name: '流入',
+		type: 'bar',
+		stack: '流动',
+		data: inData
+	}, {
+		name: '流出',
+		type: 'bar',
+		stack: '流动',
+		data: outData
+	});
+	var flowOption = flowChart.getOption();
+	option.xAxis[0].data = flowChart.getOption().legend[0].data;
+
+	var barChart = echarts.init(dom);
+	barChart.setOption(option);
+	barChart.on("click", function (e) {
+		flowChart.dispatchAction({
+			'type': 'legendSelect',
+			'name': e.name
+		});
+	});
+}
+
+function taxiEchartsMap(data, myChart) {
+	var districtLonLat = {
+		"海淀区": [116.299059, 39.966493],
+		"朝阳区": [116.479583, 39.963396],
+		"东城区": [116.419217, 39.937289],
+		"丰台区": [116.29101, 39.86511],
+		"通州区": [116.661831, 39.917813],
+		"石景山区": [116.22317, 39.9125],
+		"门头沟区": [116.107037, 39.948353],
+		"西城区": [116.369199, 39.918698],
+		"房山区": [116.147856, 39.754701],
+		"大兴区": [116.147856, 39.754701],
+		"昌平区": [116.237831, 40.227662],
+		"顺义区": [116.659819, 40.136379],
+		"怀柔区": [116.637972, 40.322782]
+	};
+
+	var series = [];
+	var planePath = 'path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705.06,1318.313z';
+	var bar_stack_in = {};
+	var bar_stack_out = {};
+	var out_data = [];
+	var in_data = [];
+
+	for (var n in data) {
+		option.legend.data.push(n);
+		bar_option.xAxis[0].data.push(n);
+		var item = data[n];
+		var temp_markline_data = [];
+		var temp_point_data = [];
+		bar_stack_out[n] = 0;
+		for (var v in item) {
+
+			if (v != n) {
+				if (bar_stack_in[v]) {
+					bar_stack_in[v] += item[v];
+				} else {
+					bar_stack_in[v] = item[v];
+				}
+				bar_stack_out[n] += item[v];
+				temp_markline_data.push([{ name: n, coord: districtLonLat[n], value: item[v] }, { name: v, coord: districtLonLat[v], value: item[v] }]);
+				temp_point_data.push({ name: v, value: districtLonLat[v].concat([item[v]]) });
+			}
+		}
+		out_data.push(bar_stack_out[n]);
+		in_data.push(getDistrictIn(n));
+	}
+
+	console.log(bar_stack_out);
+	console.log(bar_stack_in);
+	option.series = series;
+	var barChart = echarts.init(document.getElementById("region-inout"));
+	barChart.setOption(bar_option);
+	barChart.on("click", function (e) {
+		myChart.dispatchAction({
+			'type': 'legendSelect',
+			'name': e.name
+		});
+	});
 	myChart.setOption(option);
 	myChart.hideLoading();
 	myChart.on("bmapRoam", function (e) {
 		if (e.level > 13) {}
 	});
+
 	console.log(myChart.getOption());
 	console.log(myChart);
 }
 
-exports.taxiVisChart = taxiVisChart;
+exports.TaxiVisChart = TaxiVisChart;
 
 },{}],5:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-/*
-* 垂直滚动标签
-@param domId 需要初始化成verticalTap的domId
-*/
-function verticalTap(domId, fn) {
-	//先初始化show or hide
-	var activeObj; //当前选中tab
-	var items = $("#" + domId).find("> .tool-item");
-	items.each(function (index, elem) {
-		var constolId = $(elem).attr('data-control');
-		if ($(elem).hasClass("active")) {
-			$("#" + constolId).show();
-			activeObj = $(elem);
-		} else {
-			$("#" + constolId).hide();
-		}
-	});
-
-	//如果没有预设active值，则默认第一个是活动tab
-	if (!activeObj) {
-		var activeItem = items[0];
-		activeObj = $(activeItem);
-		activeObj.addClass("active");
-		var activeId = activeObj.attr("data-control");
-		$("#" + activeId).show();
-	}
-
-	//点击切换
-	$("#" + domId).on("click", function (event) {
-
-		var currentObj = $(event.target);
-		if (!currentObj.attr("data-control")) {
-			return;
-		}
-		if (currentObj.hasClass("active")) {
-			return;
-		}
-
-		//被点击项拉到中间
-		var centerScroolTop = ($("#" + domId).height() - currentObj.height()) / 2;
-		$("#" + domId).scrollTop(currentObj[0].offsetTop - centerScroolTop);
-
-		//切换操作
-		activeObj.removeClass('active');
-		$("#" + activeObj.attr("data-control")).hide();
-
-		activeObj = currentObj;
-		activeObj.addClass("active");
-		var relatedId = activeObj.attr('data-control');
-		if (relatedId) {
-			$("#" + relatedId).show();
-		} else {
-			console.log('need data-control attribute');
-		}
-
-		//执行绑定的额外的click操作
-		fn(event);
-	});
-}
-
-exports.verticalTap = verticalTap;
-
-},{}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-function weiboTextMap(domId) {
-    var map = initMap(domId);
-    $.get("data/idf.txt", function (data) {
-        var split_array = data.split("\n");
-        var idfArray = [];
-        for (var i = 0; i < split_array.length; i++) {
-            var item = split_array[i].split(" ");
-            idfArray[item[0]] = parseInt(item[1]);
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var WeiboTextMap = (function () {
+    function WeiboTextMap(domId) {
+        _classCallCheck(this, WeiboTextMap);
+
+        this.domId = domId;
+        $("#" + domId).show();
+        var map = initMap(domId);
+        $.get("data/idf.txt", function (data) {
+            var split_array = data.split("\n");
+            var idfArray = [];
+            for (var i = 0; i < split_array.length; i++) {
+                var item = split_array[i].split(" ");
+                idfArray[item[0]] = parseInt(item[1]);
+            }
+            getWeiboData("北京", map, idfArray);
+        });
+    }
+
+    _createClass(WeiboTextMap, [{
+        key: "show",
+        value: function show() {
+            $("#" + this.domId).show();
         }
-        getWeiboData("北京", map, idfArray);
-    });
-}
+    }, {
+        key: "hide",
+        value: function hide() {
+            $("#" + this.domId).hide();
+        }
+    }]);
+
+    return WeiboTextMap;
+})();
 
 /**
- * 初始化地图
- * @param  {[string]} domId [地图容器dom id]
- * @return {[obj]}       [地图对象]
+ * map initialize
+ * @param  {[string]} domId [map container dom id]
+ * @return {[obj]}       [map object]
  */
+
 function initMap(domId) {
     L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
     var layer = L.mapbox.tileLayer('mapbox.streets');
     var layer_satelite = L.mapbox.tileLayer('mapbox.streets-satellite');
-    var map = L.mapbox.map(domId).setView([30.608623, 114.274462], 11);
-    var baseLayers = {
-        "实时": layer.addTo(map),
-        "话题热度": layer_satelite
-    };
+    var map = L.mapbox.map(domId).setView([30.608623, 114.274462], 11).addLayer(layer);
 
-    L.control.layers(baseLayers).addTo(map);
-    map.on('baselayerchange', baseLyaerChange);
     return map;
 }
 
-function baseLyaerChange(event) {
-    if (event.name == '话题热度') {
-        $("#map").hide();
-        $("#map-3d").show();
-        weiboVis3D("map-3d");
-    }
-}
+var Event3DMap = (function () {
+    function Event3DMap(domId) {
+        _classCallCheck(this, Event3DMap);
 
-function weiboVis3D(domId) {
-    var container = document.getElementById(domId);
-    var globe = new DAT.Globe(container);
-    $.get("http://202.114.123.53/zx/aqi/getAQICityList.php").then(function (data) {
-        data = JSON.parse(data);
-        var mapdata = [];
-        mapdata['1990'] = [];
-        for (var i in data) {
-            var city = data[i];
-            mapdata['1990'].push(city.lat);
-            mapdata['1990'].push(city.lon);
-            mapdata['1990'].push(Math.random() - 0.6);
+        this.domId = domId;
+        $("#" + domId).show();
+        var container = document.getElementById(domId);
+        var globe = new DAT.Globe(container);
+        $.get("http://202.114.123.53/zx/aqi/getAQICityList.php").then(function (data) {
+            data = JSON.parse(data);
+            var mapdata = [];
+            mapdata['1990'] = [];
+            for (var i in data) {
+                var city = data[i];
+                mapdata['1990'].push(city.lat);
+                mapdata['1990'].push(city.lon);
+                mapdata['1990'].push(Math.random() - 0.6);
+            }
+            globe.addData(mapdata['1990'], { format: 'magnitude', name: '1990' });
+            // Create the geometry
+            globe.createPoints();
+            // Begin animation
+            globe.animate();
+        });
+    }
+
+    _createClass(Event3DMap, [{
+        key: "hide",
+        value: function hide() {
+            $("#" + this.domId).hide();
         }
-        globe.addData(mapdata['1990'], { format: 'magnitude', name: '1990' });
-        // Create the geometry
-        globe.createPoints();
-        // Begin animation
-        globe.animate();
-    });
-}
+    }, {
+        key: "show",
+        value: function show() {
+            $("#" + this.domId).show();
+        }
+    }]);
+
+    return Event3DMap;
+})();
 
 /**
  * 获取微博数据
@@ -787,6 +999,7 @@ function weiboVis3D(domId) {
  * @param  {[string]} idfArray [idf的数组]
  * @return {[null]}          [无]
  */
+
 function getWeiboData(city, map, idfArray) {
     $.get('http://202.114.123.53/zx/weibo/getWeiboData.php', { 'city': '武汉' }).then(function (data) {
         handleWeiboData(event.target.responseText, map, idfArray);
@@ -871,17 +1084,18 @@ function showWeiboDetail(e) {
     var tooltip = $("#tooltip");
     var tooltip_content = $("#tooltip-content");
     var centerText = e.layer._icon.textContent;
+    var map_container = e.target._map._container;
     var point = e.target._map.latLngToContainerPoint(e.latlng);
 
     //获取当前的markers
     var currentMarkers = e.layer.getAllChildMarkers();
 
-    tooltip.css("left", point.x + $("#map")[0].offsetLeft);
+    tooltip.css("left", point.x + map_container.offsetLeft);
     tooltip_content.css("width", '200px');
     tooltip.css("width", '205px');
 
     //如果point在下方，为避免出现tips超出主图区域，故让tips左下角定位在center
-    if ($("#map").height() - point.y <= 250) {
+    if (map_container.clientHeight - point.y <= 250) {
         tooltip.css("top", point.y - 250);
     } else {
         tooltip.css("top", point.y);
@@ -1042,7 +1256,8 @@ function getAllSubStrings(str, maxLength) {
 
     return result;
 }
-exports.weiboTextMap = weiboTextMap;
+exports.WeiboTextMap = WeiboTextMap;
+exports.Event3DMap = Event3DMap;
 
 },{}]},{},[1]);
 

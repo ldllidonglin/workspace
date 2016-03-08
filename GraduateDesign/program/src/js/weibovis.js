@@ -1,66 +1,71 @@
+class WeiboTextMap {
+    constructor(domId){
+        this.domId = domId;
+        $("#"+domId).show();
+        var map = initMap(domId);
+        $.get("data/idf.txt",function(data){
+            var split_array=data.split("\n");
+            var idfArray=[];
+            for(var i=0;i<split_array.length;i++){
+                var item=split_array[i].split(" ");
+                idfArray[item[0]]=parseInt(item[1]);
+            }
+            getWeiboData("北京",map,idfArray);
+        });
 
-function weiboTextMap(domId){
-    var map = initMap(domId);
-    $.get("data/idf.txt",function(data){
-        var split_array=data.split("\n");
-        var idfArray=[];
-        for(var i=0;i<split_array.length;i++){
-            var item=split_array[i].split(" ");
-            idfArray[item[0]]=parseInt(item[1]);
-        }
-        getWeiboData("北京",map,idfArray);
-
-    });
+    }
+    show(){
+        $("#"+this.domId).show();
+    }
+    hide(){
+        $("#"+this.domId).hide();
+    }
 }
 
 /**
- * 初始化地图
- * @param  {[string]} domId [地图容器dom id]
- * @return {[obj]}       [地图对象]
+ * map initialize
+ * @param  {[string]} domId [map container dom id]
+ * @return {[obj]}       [map object]
  */
 function initMap(domId){
     L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
     var layer = L.mapbox.tileLayer('mapbox.streets');
     var layer_satelite = L.mapbox.tileLayer('mapbox.streets-satellite');
-    var map = L.mapbox.map(domId).setView([30.608623,114.274462], 11);
-    var baseLayers = {
-        "实时": layer.addTo(map),
-        "话题热度": layer_satelite
-    };
+    var map = L.mapbox.map(domId).setView([30.608623,114.274462], 11).addLayer(layer);
 
-    L.control.layers(baseLayers).addTo(map);
-    map.on('baselayerchange',baseLyaerChange);
     return map;
 }
 
-function baseLyaerChange(event){
-    if(event.name == '话题热度'){
-        $("#map").hide();
-        $("#map-3d").show();
-        weiboVis3D("map-3d");
+class  Event3DMap{
+    constructor(domId){
+        this.domId = domId;
+        $("#"+domId).show();
+        var container = document.getElementById(domId);
+        var globe = new DAT.Globe(container);
+        $.get("http://202.114.123.53/zx/aqi/getAQICityList.php")
+        .then(function(data){
+            data = JSON.parse(data);
+            var mapdata=[];
+            mapdata['1990']=[];
+            for(var i in data){
+                var city=data[i];
+                mapdata['1990'].push(city.lat);
+                mapdata['1990'].push(city.lon);
+                mapdata['1990'].push(Math.random()-0.6);
+            }
+            globe.addData( mapdata['1990'], {format: 'magnitude', name: '1990'} );
+            // Create the geometry
+            globe.createPoints();
+            // Begin animation
+            globe.animate();
+        });
     }
-}
-
-function weiboVis3D(domId){
-    var container = document.getElementById(domId);
-    var globe = new DAT.Globe(container);
-    $.get("http://202.114.123.53/zx/aqi/getAQICityList.php")
-    .then(function(data){
-        data = JSON.parse(data);
-        var mapdata=[];
-        mapdata['1990']=[];
-        for(var i in data){
-            var city=data[i];
-            mapdata['1990'].push(city.lat);
-            mapdata['1990'].push(city.lon);
-            mapdata['1990'].push(Math.random()-0.6);
-        }
-        globe.addData( mapdata['1990'], {format: 'magnitude', name: '1990'} );
-        // Create the geometry
-        globe.createPoints();
-        // Begin animation
-        globe.animate();
-    });
+    hide(){
+        $("#"+this.domId).hide();
+    }
+    show(){
+        $("#"+this.domId).show();
+    }
 }
 
 /**
@@ -151,24 +156,23 @@ function handleWeiboData(data,map,idfArray){
     });
 }
 
-
-
 function showWeiboDetail(e){
 
 	var tooltip = $("#tooltip");
 	var tooltip_content = $("#tooltip-content");
     var centerText = e.layer._icon.textContent;
+    var map_container = e.target._map._container;
     var point = e.target._map.latLngToContainerPoint(e.latlng);
 
     //获取当前的markers
     var currentMarkers = e.layer.getAllChildMarkers();
 
-	tooltip.css("left",point.x+$("#map")[0].offsetLeft);
+	tooltip.css("left",point.x+map_container.offsetLeft);
 	tooltip_content.css("width",'200px');
 	tooltip.css("width",'205px');
 	
     //如果point在下方，为避免出现tips超出主图区域，故让tips左下角定位在center
-    if($("#map").height()-point.y<=250){
+    if(map_container.clientHeight-point.y<=250){
         tooltip.css("top",point.y-250);
     }else{
         tooltip.css("top",point.y);
@@ -347,4 +351,4 @@ function getAllSubStrings(str, maxLength) {
 
     return result;
 }
-export { weiboTextMap };
+export { WeiboTextMap, Event3DMap };
