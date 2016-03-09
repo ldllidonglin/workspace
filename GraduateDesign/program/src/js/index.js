@@ -3,7 +3,7 @@ import { layoutIni } from './layout.js';
 import { TaxiVisChart } from './taxiVis.js';
 import { PoiVisMap } from './poivis.js';
 
-
+//global varible relate to vistap
 let INITOBJ={
     'textmap':0,
     'eventmap':0,
@@ -66,7 +66,6 @@ $("#timevis-list").on("click",e =>{
             break;
     }
 });
-
 
 
 function cleanMainWindow(){

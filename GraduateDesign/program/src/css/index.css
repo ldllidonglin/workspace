@@ -47,8 +47,12 @@ nav{
 		display: none;
 	}
 	#trajectory-vis-container{
+
 		height: 100%;
 		display: none;
+		#weibo-datepicker{
+			width:10%;
+		}
 	}
 }
 #tool-container{

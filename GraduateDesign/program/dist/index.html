@@ -24,7 +24,7 @@
     <script type="text/javascript" src="vendor/webgl-globe/three.min.js"></script>
     <script type="text/javascript" src="vendor/webgl-globe/globe.js"></script>
     <script type="text/javascript" src="vendor/polyfill.min.js"></script>
-    <link rel="stylesheet" href="css/main.af03053b.css">
+    <link rel="stylesheet" href="css/main.ed0ea3e8.css">
 
 </head>
 <body>
@@ -42,7 +42,7 @@
         </ul>
     </div>
     <ul id="textvis-list" class="dropdown-content">
-        <li><a href="#!" id="weibo-text-vis">24小时微博聚合可视化</a></li>
+        <li><a href="#!" id="weibo-text-vis">微博聚合可视化</a></li>
         <li><a href="#!" id="weibo-event-vis">事件热度三维可视化</a></li>
     </ul>
     <ul id="spatialvis-list" class="dropdown-content">
@@ -67,7 +67,9 @@
                 <div id='border' class='overlay'></div>
             </div>
         </div>
-        <div id="trajectory-vis-container"></div>
+        <div id="trajectory-vis-container">
+            选择时间<input id="weibo-datepicker" type="date" class="datepicker">
+        </div>
         <div id="tooltip">
             <div id="tooltip-header">共15条微博</div>
             <div id="tooltip-content"></div>
@@ -83,6 +85,6 @@
     
     <script src="vendor/echarts/echarts.min.js"></script>
     <script src="vendor/echarts/bmap.js"></script>
- 	<script src="js/bundle.505142d4.js"></script>
+ 	<script src="js/bundle.76129162.js"></script>
    
 </html>

@@ -2,9 +2,7 @@ class TaxiVisChart{
 	constructor(domId){
 		this.domId = domId;
 		$("#"+domId).show();
-		var g = visChartGenerator(domId);
-		g.next();
-		window.g=g;
+		getCharts(domId);
 	}
 	show(){
         $("#"+this.domId).show();
@@ -13,11 +11,8 @@ class TaxiVisChart{
         $("#"+this.domId).hide();
     }
 }
-// function taxiVisChart(domId){
 
-// }
-
-function* visChartGenerator(domId){
+async function getCharts(domId){
 	var container = document.getElementById(domId);
 
 	var rowdiv = document.createElement("div");
@@ -39,11 +34,13 @@ function* visChartGenerator(domId){
 	container.appendChild(rowdiv);
 
 	//get geojson of wuhan
-	var wuhan_map = yield getGeojson("武汉市");
+	var wuhan_map = await getGeojson("武汉市");
+	console.log(wuhan_map);
+
 	echarts.registerMap('wuhan', wuhan_map);
 	//get od-data of wuhan
-	var wuhan_od = yield getODData();
-
+	var wuhan_od = await getODData();
+	console.log(wuhan_od);
 	var result_data = processODData(wuhan_od);
 
 	//get Flowchart
@@ -55,14 +52,14 @@ function* visChartGenerator(domId){
 
 }
 
-function getJSON(url,param){
+function getJSON(url){
 	var promise = new Promise(function(resolve, reject){
 	    var client = new XMLHttpRequest();
 	    client.open("GET", url);
 	    client.onreadystatechange = handler;
 	    client.responseType = "json";
 	    client.setRequestHeader("Accept", "application/json");
-	    client.send(param);
+	    client.send();
 
 	    function handler() {
 	      if ( this.readyState !== 4 ) {
@@ -81,55 +78,82 @@ function getJSON(url,param){
 
 
 function getGeojson(city){
-	getJSON("http://202.114.123.53/zx/taxi/getGeojson.php",{'city':city})
-	.then(data => {
-		g.next(data);
-	});
+	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city="+city);
 }
 
 
 function getODData(){
-	getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php")
-	.then(data => {
-		var taxi_data = data;
+	return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php");
+	// .then(data => {
+	// 	var taxi_data = data;
 
-		var draw_data = {};
+	// 	var draw_data = {};
 
-		//calculate in/out between two district
-		for(let i = 0,length = taxi_data.length;i<length;i++){
-			var start_point = taxi_data[i];
+	// 	//calculate in/out between two district
+	// 	for(let i = 0,length = taxi_data.length;i<length;i++){
+	// 		var start_point = taxi_data[i];
 			
-			if(start_point.state !== 0){
-				continue;
-			}
+	// 		if(start_point.state !== 0){
+	// 			continue;
+	// 		}
 
-			if(i >= length-1){
-				break;
-			}
-			var end_point = taxi_data[i+1];
-			if(start_point.district === ''||end_point.district === ''){
-				continue;
-			}
-			if(draw_data[start_point.district]){
-				if(draw_data[start_point.district][end_point.district]){
-					draw_data[start_point.district][end_point.district] += 1;
-				}else{
-					draw_data[start_point.district][end_point.district] = 1;
-				}
-			}else{
-				draw_data[start_point.district] = {};
-				draw_data[start_point.district][end_point.district] = 1;
-			}
+	// 		if(i >= length-1){
+	// 			break;
+	// 		}
+	// 		var end_point = taxi_data[i+1];
+	// 		if(start_point.district === ''||end_point.district === ''){
+	// 			continue;
+	// 		}
+	// 		if(draw_data[start_point.district]){
+	// 			if(draw_data[start_point.district][end_point.district]){
+	// 				draw_data[start_point.district][end_point.district] += 1;
+	// 			}else{
+	// 				draw_data[start_point.district][end_point.district] = 1;
+	// 			}
+	// 		}else{
+	// 			draw_data[start_point.district] = {};
+	// 			draw_data[start_point.district][end_point.district] = 1;
+	// 		}
 
-			i++;	
-		}
-		console.log(draw_data);
-		g.next(draw_data);
-
-	});
+	// 		i++;	
+	// 	}
+	// });
 }
 
 function processODData(data){
+	var taxi_data = data;
+
+	var draw_data = {};
+
+		//calculate in/out between two district
+	for(let i = 0,length = taxi_data.length;i<length;i++){
+		var start_point = taxi_data[i];
+		
+		if(start_point.state !== 0){
+			continue;
+		}
+
+		if(i >= length-1){
+			break;
+		}
+		var end_point = taxi_data[i+1];
+		if(start_point.district === ''||end_point.district === ''){
+			continue;
+		}
+		if(draw_data[start_point.district]){
+			if(draw_data[start_point.district][end_point.district]){
+				draw_data[start_point.district][end_point.district] += 1;
+			}else{
+				draw_data[start_point.district][end_point.district] = 1;
+			}
+		}else{
+			draw_data[start_point.district] = {};
+			draw_data[start_point.district][end_point.district] = 1;
+		}
+
+		i++;	
+	}
+	data = draw_data;
 	let districtLonLat = {
 		"江汉区":[114.274462,30.608623],
 		"武昌区":[114.320455,30.56087],
@@ -456,6 +480,15 @@ function taxiFlowChart(dom,linesData,pointsData){
 
 function taxiPassOutChart(dom,inData,outData,flowChart){
 	var option = {
+		title : {
+	        text: '武汉各区出租车流入流出',
+	        subtext: '',
+	        left:'left',
+	        bottom: '15%',
+	        textStyle : {
+	            color: '#070716'
+	        }
+	    },
 		tooltip : {
 	        trigger: 'axis',
 	        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
@@ -463,6 +496,7 @@ function taxiPassOutChart(dom,inData,outData,flowChart){
 	        }
 	    },
 	    legend: {
+	    	left:'right',
 	        data:['流入','流出']
 	    },
 	    grid: {
@@ -507,81 +541,20 @@ function taxiPassOutChart(dom,inData,outData,flowChart){
 		})
 	});
 }
-
-function taxiEchartsMap(data,myChart){
-	var districtLonLat = {
-		"海淀区":[116.299059,39.966493],
-		"朝阳区":[116.479583,39.963396],
-		"东城区":[116.419217,39.937289],
-		"丰台区":[116.29101,39.86511],
-		"通州区":[116.661831,39.917813],
-		"石景山区":[116.22317,39.9125],
-		"门头沟区":[116.107037,39.948353],
-		"西城区":[116.369199,39.918698],
-		"房山区":[116.147856,39.754701],
-		"大兴区":[116.147856,39.754701],
-		"昌平区":[116.237831,40.227662],
-		"顺义区":[116.659819,40.136379],
-		"怀柔区":[116.637972,40.322782]
-	};
-
-
-	var series = [];
-	var planePath = 'path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705.06,1318.313z';
-	var bar_stack_in = {};
-	var bar_stack_out ={};
-	var out_data = [];
-	var in_data = [];
-	
-	for(let n in data){
-		option.legend.data.push(n);
-		bar_option.xAxis[0].data.push(n);
-		var item = data[n];
-		var temp_markline_data = [];
-		var temp_point_data = [];
-		bar_stack_out[n] = 0;
-		for(let v in item){
-
-			if(v != n){
-				if(bar_stack_in[v]){
-					bar_stack_in[v] += item[v]
-				}else{
-					bar_stack_in[v] = item[v];
-				}
-				bar_stack_out[n] += item[v];
-				temp_markline_data.push([{name:n,coord:districtLonLat[n],value:item[v]},{name:v,coord:districtLonLat[v],value:item[v]}]);
-				temp_point_data.push({name:v,value:districtLonLat[v].concat([item[v]])});
-			}
-		}
-		out_data.push(bar_stack_out[n]);
-		in_data.push(getDistrictIn(n));
-		
-	}
-
-	
-	console.log(bar_stack_out);
-	console.log(bar_stack_in);
-	option.series = series;
-	var barChart = echarts.init(document.getElementById("region-inout"));
-	barChart.setOption(bar_option);
-	barChart.on("click",e => {
-		myChart.dispatchAction({
-			'type':'legendSelect',
-			'name':e.name
-		})
-	});
-	myChart.setOption(option);
-	myChart.hideLoading();
-	myChart.on("bmapRoam",e =>{
-		if(e.level > 13){
-
-		}
-	});
-
-	
-
-	console.log(myChart.getOption());
-	console.log(myChart);
-}
+// var districtLonLat = {
+// 	"海淀区":[116.299059,39.966493],
+// 	"朝阳区":[116.479583,39.963396],
+// 	"东城区":[116.419217,39.937289],
+// 	"丰台区":[116.29101,39.86511],
+// 	"通州区":[116.661831,39.917813],
+// 	"石景山区":[116.22317,39.9125],
+// 	"门头沟区":[116.107037,39.948353],
+// 	"西城区":[116.369199,39.918698],
+// 	"房山区":[116.147856,39.754701],
+// 	"大兴区":[116.147856,39.754701],
+// 	"昌平区":[116.237831,40.227662],
+// 	"顺义区":[116.659819,40.136379],
+// 	"怀柔区":[116.637972,40.322782]
+// };
 
 export { TaxiVisChart };

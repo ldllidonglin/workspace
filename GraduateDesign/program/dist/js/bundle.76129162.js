@@ -9,6 +9,7 @@ var _taxiVis = require('./taxiVis.js');
 
 var _poivis = require('./poivis.js');
 
+//global varible relate to vistap
 var INITOBJ = {
     'textmap': 0,
     'eventmap': 0,
@@ -310,7 +311,77 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _marked = [visChartGenerator].map(regeneratorRuntime.mark);
+var getCharts = (function () {
+	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(domId) {
+		var container, rowdiv, passChartDom, flowChartDom, wuhan_map, wuhan_od, result_data, flowChart, passChart;
+		return regeneratorRuntime.wrap(function _callee$(_context) {
+			while (1) {
+				switch (_context.prev = _context.next) {
+					case 0:
+						container = document.getElementById(domId);
+						rowdiv = document.createElement("div");
+
+						rowdiv.className = 'row';
+						//Initialize
+						passChartDom = document.createElement('div');
+
+						passChartDom.style.width = '500px';
+						passChartDom.style.height = '600px';
+						passChartDom.id = 'taxi-pass-chart';
+						passChartDom.className = 'col s4';
+						rowdiv.appendChild(passChartDom);
+
+						flowChartDom = document.createElement('div');
+
+						flowChartDom.style.width = '500px';
+						flowChartDom.style.height = '600px';
+						flowChartDom.id = 'taxi-flow-chart';
+						flowChartDom.className = 'col s4';
+						rowdiv.appendChild(flowChartDom);
+						container.appendChild(rowdiv);
+
+						//get geojson of wuhan
+						_context.next = 18;
+						return getGeojson("武汉市");
+
+					case 18:
+						wuhan_map = _context.sent;
+
+						console.log(wuhan_map);
+
+						echarts.registerMap('wuhan', wuhan_map);
+						//get od-data of wuhan
+						_context.next = 23;
+						return getODData();
+
+					case 23:
+						wuhan_od = _context.sent;
+
+						console.log(wuhan_od);
+						result_data = processODData(wuhan_od);
+
+						//get Flowchart
+
+						flowChart = taxiFlowChart(flowChartDom, result_data['limes'], result_data['points']);
+
+						//get PassOutChart
+
+						passChart = taxiPassOutChart(passChartDom, result_data['in'], result_data['out'], flowChart);
+
+					case 28:
+					case "end":
+						return _context.stop();
+				}
+			}
+		}, _callee, this);
+	}));
+
+	return function getCharts(_x) {
+		return ref.apply(this, arguments);
+	};
+})();
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -320,9 +391,7 @@ var TaxiVisChart = (function () {
 
 		this.domId = domId;
 		$("#" + domId).show();
-		var g = visChartGenerator(domId);
-		g.next();
-		window.g = g;
+		getCharts(domId);
 	}
 
 	_createClass(TaxiVisChart, [{
@@ -339,78 +408,15 @@ var TaxiVisChart = (function () {
 
 	return TaxiVisChart;
 })();
-// function taxiVisChart(domId){
 
-// }
-
-function visChartGenerator(domId) {
-	var container, rowdiv, passChartDom, flowChartDom, wuhan_map, wuhan_od, result_data, flowChart, passChart;
-	return regeneratorRuntime.wrap(function visChartGenerator$(_context) {
-		while (1) {
-			switch (_context.prev = _context.next) {
-				case 0:
-					container = document.getElementById(domId);
-					rowdiv = document.createElement("div");
-
-					rowdiv.className = 'row';
-					//Initialize
-					passChartDom = document.createElement('div');
-
-					passChartDom.style.width = '500px';
-					passChartDom.style.height = '600px';
-					passChartDom.id = 'taxi-pass-chart';
-					passChartDom.className = 'col s4';
-					rowdiv.appendChild(passChartDom);
-
-					flowChartDom = document.createElement('div');
-
-					flowChartDom.style.width = '500px';
-					flowChartDom.style.height = '600px';
-					flowChartDom.id = 'taxi-flow-chart';
-					flowChartDom.className = 'col s4';
-					rowdiv.appendChild(flowChartDom);
-					container.appendChild(rowdiv);
-
-					//get geojson of wuhan
-					_context.next = 18;
-					return getGeojson("武汉市");
-
-				case 18:
-					wuhan_map = _context.sent;
-
-					echarts.registerMap('wuhan', wuhan_map);
-					//get od-data of wuhan
-					_context.next = 22;
-					return getODData();
-
-				case 22:
-					wuhan_od = _context.sent;
-					result_data = processODData(wuhan_od);
-
-					//get Flowchart
-
-					flowChart = taxiFlowChart(flowChartDom, result_data['limes'], result_data['points']);
-
-					//get PassOutChart
-
-					passChart = taxiPassOutChart(passChartDom, result_data['in'], result_data['out'], flowChart);
-
-				case 26:
-				case "end":
-					return _context.stop();
-			}
-		}
-	}, _marked[0], this);
-}
-
-function getJSON(url, param) {
+function getJSON(url) {
 	var promise = new Promise(function (resolve, reject) {
 		var client = new XMLHttpRequest();
 		client.open("GET", url);
 		client.onreadystatechange = handler;
 		client.responseType = "json";
 		client.setRequestHeader("Accept", "application/json");
-		client.send(param);
+		client.send();
 
 		function handler() {
 			if (this.readyState !== 4) {
@@ -427,51 +433,81 @@ function getJSON(url, param) {
 }
 
 function getGeojson(city) {
-	getJSON("http://202.114.123.53/zx/taxi/getGeojson.php", { 'city': city }).then(function (data) {
-		g.next(data);
-	});
+	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city=" + city);
 }
 
 function getODData() {
-	getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php").then(function (data) {
-		var taxi_data = data;
+	return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php");
+	// .then(data => {
+	// 	var taxi_data = data;
 
-		var draw_data = {};
+	// 	var draw_data = {};
 
-		//calculate in/out between two district
-		for (var i = 0, length = taxi_data.length; i < length; i++) {
-			var start_point = taxi_data[i];
+	// 	//calculate in/out between two district
+	// 	for(let i = 0,length = taxi_data.length;i<length;i++){
+	// 		var start_point = taxi_data[i];
 
-			if (start_point.state !== 0) {
-				continue;
-			}
+	// 		if(start_point.state !== 0){
+	// 			continue;
+	// 		}
 
-			if (i >= length - 1) {
-				break;
-			}
-			var end_point = taxi_data[i + 1];
-			if (start_point.district === '' || end_point.district === '') {
-				continue;
-			}
-			if (draw_data[start_point.district]) {
-				if (draw_data[start_point.district][end_point.district]) {
-					draw_data[start_point.district][end_point.district] += 1;
-				} else {
-					draw_data[start_point.district][end_point.district] = 1;
-				}
-			} else {
-				draw_data[start_point.district] = {};
-				draw_data[start_point.district][end_point.district] = 1;
-			}
+	// 		if(i >= length-1){
+	// 			break;
+	// 		}
+	// 		var end_point = taxi_data[i+1];
+	// 		if(start_point.district === ''||end_point.district === ''){
+	// 			continue;
+	// 		}
+	// 		if(draw_data[start_point.district]){
+	// 			if(draw_data[start_point.district][end_point.district]){
+	// 				draw_data[start_point.district][end_point.district] += 1;
+	// 			}else{
+	// 				draw_data[start_point.district][end_point.district] = 1;
+	// 			}
+	// 		}else{
+	// 			draw_data[start_point.district] = {};
+	// 			draw_data[start_point.district][end_point.district] = 1;
+	// 		}
 
-			i++;
-		}
-		console.log(draw_data);
-		g.next(draw_data);
-	});
+	// 		i++;	
+	// 	}
+	// });
 }
 
 function processODData(data) {
+	var taxi_data = data;
+
+	var draw_data = {};
+
+	//calculate in/out between two district
+	for (var i = 0, length = taxi_data.length; i < length; i++) {
+		var start_point = taxi_data[i];
+
+		if (start_point.state !== 0) {
+			continue;
+		}
+
+		if (i >= length - 1) {
+			break;
+		}
+		var end_point = taxi_data[i + 1];
+		if (start_point.district === '' || end_point.district === '') {
+			continue;
+		}
+		if (draw_data[start_point.district]) {
+			if (draw_data[start_point.district][end_point.district]) {
+				draw_data[start_point.district][end_point.district] += 1;
+			} else {
+				draw_data[start_point.district][end_point.district] = 1;
+			}
+		} else {
+			draw_data[start_point.district] = {};
+			draw_data[start_point.district][end_point.district] = 1;
+		}
+
+		i++;
+	}
+	data = draw_data;
 	var districtLonLat = {
 		"江汉区": [114.274462, 30.608623],
 		"武昌区": [114.320455, 30.56087],
@@ -773,6 +809,15 @@ function taxiFlowChart(dom, linesData, pointsData) {
 
 function taxiPassOutChart(dom, inData, outData, flowChart) {
 	var option = {
+		title: {
+			text: '武汉各区出租车流入流出',
+			subtext: '',
+			left: 'left',
+			bottom: '15%',
+			textStyle: {
+				color: '#070716'
+			}
+		},
 		tooltip: {
 			trigger: 'axis',
 			axisPointer: { // 坐标轴指示器，坐标轴触发有效
@@ -780,6 +825,7 @@ function taxiPassOutChart(dom, inData, outData, flowChart) {
 			}
 		},
 		legend: {
+			left: 'right',
 			data: ['流入', '流出']
 		},
 		grid: {
@@ -820,75 +866,21 @@ function taxiPassOutChart(dom, inData, outData, flowChart) {
 		});
 	});
 }
-
-function taxiEchartsMap(data, myChart) {
-	var districtLonLat = {
-		"海淀区": [116.299059, 39.966493],
-		"朝阳区": [116.479583, 39.963396],
-		"东城区": [116.419217, 39.937289],
-		"丰台区": [116.29101, 39.86511],
-		"通州区": [116.661831, 39.917813],
-		"石景山区": [116.22317, 39.9125],
-		"门头沟区": [116.107037, 39.948353],
-		"西城区": [116.369199, 39.918698],
-		"房山区": [116.147856, 39.754701],
-		"大兴区": [116.147856, 39.754701],
-		"昌平区": [116.237831, 40.227662],
-		"顺义区": [116.659819, 40.136379],
-		"怀柔区": [116.637972, 40.322782]
-	};
-
-	var series = [];
-	var planePath = 'path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705.06,1318.313z';
-	var bar_stack_in = {};
-	var bar_stack_out = {};
-	var out_data = [];
-	var in_data = [];
-
-	for (var n in data) {
-		option.legend.data.push(n);
-		bar_option.xAxis[0].data.push(n);
-		var item = data[n];
-		var temp_markline_data = [];
-		var temp_point_data = [];
-		bar_stack_out[n] = 0;
-		for (var v in item) {
-
-			if (v != n) {
-				if (bar_stack_in[v]) {
-					bar_stack_in[v] += item[v];
-				} else {
-					bar_stack_in[v] = item[v];
-				}
-				bar_stack_out[n] += item[v];
-				temp_markline_data.push([{ name: n, coord: districtLonLat[n], value: item[v] }, { name: v, coord: districtLonLat[v], value: item[v] }]);
-				temp_point_data.push({ name: v, value: districtLonLat[v].concat([item[v]]) });
-			}
-		}
-		out_data.push(bar_stack_out[n]);
-		in_data.push(getDistrictIn(n));
-	}
-
-	console.log(bar_stack_out);
-	console.log(bar_stack_in);
-	option.series = series;
-	var barChart = echarts.init(document.getElementById("region-inout"));
-	barChart.setOption(bar_option);
-	barChart.on("click", function (e) {
-		myChart.dispatchAction({
-			'type': 'legendSelect',
-			'name': e.name
-		});
-	});
-	myChart.setOption(option);
-	myChart.hideLoading();
-	myChart.on("bmapRoam", function (e) {
-		if (e.level > 13) {}
-	});
-
-	console.log(myChart.getOption());
-	console.log(myChart);
-}
+// var districtLonLat = {
+// 	"海淀区":[116.299059,39.966493],
+// 	"朝阳区":[116.479583,39.963396],
+// 	"东城区":[116.419217,39.937289],
+// 	"丰台区":[116.29101,39.86511],
+// 	"通州区":[116.661831,39.917813],
+// 	"石景山区":[116.22317,39.9125],
+// 	"门头沟区":[116.107037,39.948353],
+// 	"西城区":[116.369199,39.918698],
+// 	"房山区":[116.147856,39.754701],
+// 	"大兴区":[116.147856,39.754701],
+// 	"昌平区":[116.237831,40.227662],
+// 	"顺义区":[116.659819,40.136379],
+// 	"怀柔区":[116.637972,40.322782]
+// };
 
 exports.TaxiVisChart = TaxiVisChart;
 
@@ -1263,4 +1255,4 @@ exports.Event3DMap = Event3DMap;
 
 
 
-//# sourceMappingURL=bundle.js.114e2a4a.map
+//# sourceMappingURL=bundle.js.9ccfa44f.map
