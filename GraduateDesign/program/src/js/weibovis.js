@@ -12,12 +12,21 @@ class WeiboTextMap {
         $("#"+this.domId).hide();
     }
 }
+/**
+ * initialize WeiboTextMap
+ * @param  {[Object]} map [map Object]
+ * @return {[null]}     [null]
+ */
 async function initWeiboTextMap(map){
     const IDF = await getIdfData();
     var weibo_data = await getWeiboData("武汉");
     getWeiboTextCluster(weibo_data,map,IDF);
 }
-
+/**
+ * get data by URL
+ * @param  {[string]} url [api's uri]
+ * @return {[Object]}     [promise Object]
+ */
 function getData(url){
     var promise = new Promise(function(resolve, reject){
         var client = new XMLHttpRequest();
@@ -39,6 +48,10 @@ function getData(url){
     return promise;
 }
 
+/**
+ * get the idf-dat by /data/idf.txt
+ * @return {[Object]} [Promise Object]
+ */
 function getIdfData(){
     return getData("data/idf.txt");
 }

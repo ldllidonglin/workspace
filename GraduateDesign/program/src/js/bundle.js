@@ -930,6 +930,12 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
+/**
+ * initialize WeiboTextMap
+ * @param  {[Object]} map [map Object]
+ * @return {[null]}     [null]
+ */
+
 var initWeiboTextMap = (function () {
     var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(map) {
         var IDF, weibo_data;
@@ -962,6 +968,11 @@ var initWeiboTextMap = (function () {
         return ref.apply(this, arguments);
     };
 })();
+/**
+ * get data by URL
+ * @param  {[string]} url [api's uri]
+ * @return {[Object]}     [promise Object]
+ */
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
@@ -1015,6 +1026,10 @@ function getData(url) {
     return promise;
 }
 
+/**
+ * get the idf-dat by /data/idf.txt
+ * @return {[Object]} [Promise Object]
+ */
 function getIdfData() {
     return getData("data/idf.txt");
 }
