@@ -16,8 +16,9 @@ let INITOBJ={
 $("#textvis-list").on("click",e =>{
     switch(event.target.id){
         case "weibo-text-vis":
+            cleanMainWindow();
             if(INITOBJ.textmap){
-                cleanMainWindow();
+               
                 INITOBJ.textmap.show();
             }else{
                 var text_map = new WeiboTextMap("weibo-text-map");
@@ -25,8 +26,9 @@ $("#textvis-list").on("click",e =>{
             }
             break;
         case "weibo-event-vis":
+            cleanMainWindow();
             if(INITOBJ.eventmap){
-                cleanMainWindow();
+                
                 INITOBJ.eventmap.show();
             }else{
                 var event_map = new Event3DMap("weibo-event-map");
@@ -41,8 +43,8 @@ $("#textvis-list").on("click",e =>{
 $("#spatialvis-list").on("click",e =>{
     switch(event.target.id){
         case "poi-vis":
+            cleanMainWindow();
             if(INITOBJ.poimap){
-                cleanMainWindow();
                 INITOBJ.poimap.show();
             }else{
                 var poi_map = new PoiVisMap("poi-vis-map");
@@ -56,8 +58,9 @@ $("#spatialvis-list").on("click",e =>{
 $("#timevis-list").on("click",e =>{
     switch(event.target.id){
         case "trajectory-vis":
+            cleanMainWindow();
             if(INITOBJ.taxichart){
-                cleanMainWindow();
+                
                 INITOBJ.taxichart.show();
             }else{
                 var taxichart = new TaxiVisChart("trajectory-vis-container");

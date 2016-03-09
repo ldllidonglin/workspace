@@ -32,7 +32,7 @@
 <body>
 <nav>
     <div class="nav-wrapper">
-        <a href="#" class="brand-logo right">Logo</a>
+        <a href="#" class="brand-logo right">Visualization</a>
         <ul id="nav-mobile" class="hide-on-med-and-down">
           <li><a class="dropdown-button waves-effect" data-beloworigin="true" data-activates="textvis-list">语义数据可视化<i class="mdi-navigation-arrow-drop-down right"></i></a></li>
         </ul>
@@ -57,7 +57,12 @@
 </nav>
 <div class="row" id="main">
     <div class="col s12" id="map-container">
-        <div id="weibo-text-map"></div>
+        <div id="weibo-text-map">
+            <div id="tooltip">
+                <div id="tooltip-header">共15条微博</div>
+                <div id="tooltip-content"></div>
+            </div>
+        </div>
         <div id="weibo-event-map"></div>
         <div id="poi-vis-map">
             <div id='zoomlens' class='overlay'>
@@ -70,12 +75,9 @@
             </div>
         </div>
         <div id="trajectory-vis-container">
-            选择时间<input id="weibo-datepicker" type="date" class="datepicker">
+            选择时间: <input id="weibo-datepicker" type="date" class="datepicker">
         </div>
-        <div id="tooltip">
-            <div id="tooltip-header">共15条微博</div>
-            <div id="tooltip-content"></div>
-        </div>
+
        
     </div>
 </div>

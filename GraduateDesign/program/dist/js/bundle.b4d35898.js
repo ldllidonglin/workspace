@@ -21,8 +21,9 @@ var INITOBJ = {
 $("#textvis-list").on("click", function (e) {
     switch (event.target.id) {
         case "weibo-text-vis":
+            cleanMainWindow();
             if (INITOBJ.textmap) {
-                cleanMainWindow();
+
                 INITOBJ.textmap.show();
             } else {
                 var text_map = new _weibovis.WeiboTextMap("weibo-text-map");
@@ -30,8 +31,9 @@ $("#textvis-list").on("click", function (e) {
             }
             break;
         case "weibo-event-vis":
+            cleanMainWindow();
             if (INITOBJ.eventmap) {
-                cleanMainWindow();
+
                 INITOBJ.eventmap.show();
             } else {
                 var event_map = new _weibovis.Event3DMap("weibo-event-map");
@@ -46,8 +48,8 @@ $("#textvis-list").on("click", function (e) {
 $("#spatialvis-list").on("click", function (e) {
     switch (event.target.id) {
         case "poi-vis":
+            cleanMainWindow();
             if (INITOBJ.poimap) {
-                cleanMainWindow();
                 INITOBJ.poimap.show();
             } else {
                 var poi_map = new _poivis.PoiVisMap("poi-vis-map");
@@ -61,8 +63,9 @@ $("#spatialvis-list").on("click", function (e) {
 $("#timevis-list").on("click", function (e) {
     switch (event.target.id) {
         case "trajectory-vis":
+            cleanMainWindow();
             if (INITOBJ.taxichart) {
-                cleanMainWindow();
+
                 INITOBJ.taxichart.show();
             } else {
                 var taxichart = new _taxiVis.TaxiVisChart("trajectory-vis-container");
@@ -303,7 +306,7 @@ function createHeatMap(data) {
 exports.PoiVisMap = PoiVisMap;
 
 },{}],4:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
 	value: true
@@ -313,7 +316,7 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 var getCharts = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(domId) {
-		var container, rowdiv, passChartDom, flowChartDom, wuhan_map, wuhan_od, result_data, flowChart, passChart;
+		var container, rowdiv, passChartDom, flowChartDom, flowChart, passChart, wuhan_map, wuhan_od, result_data;
 		return regeneratorRuntime.wrap(function _callee$(_context) {
 			while (1) {
 				switch (_context.prev = _context.next) {
@@ -340,36 +343,45 @@ var getCharts = (function () {
 						rowdiv.appendChild(flowChartDom);
 						container.appendChild(rowdiv);
 
+						flowChart = echarts.getInstanceByDom(flowChartDom);
+
+						if (!flowChart) {
+							flowChart = echarts.init(flowChartDom);
+						}
+						flowChart.showLoading();
+
+						passChart = echarts.getInstanceByDom(passChartDom);
+
+						if (!passChart) {
+							passChart = echarts.init(passChartDom);
+						}
+						passChart.showLoading();
 						//get geojson of wuhan
-						_context.next = 18;
+						_context.next = 24;
 						return getGeojson("武汉市");
 
-					case 18:
+					case 24:
 						wuhan_map = _context.sent;
-
-						console.log(wuhan_map);
 
 						echarts.registerMap('wuhan', wuhan_map);
 						//get od-data of wuhan
-						_context.next = 23;
+						_context.next = 28;
 						return getODData();
 
-					case 23:
+					case 28:
 						wuhan_od = _context.sent;
-
-						console.log(wuhan_od);
 						result_data = processODData(wuhan_od);
 
 						//get Flowchart
 
-						flowChart = taxiFlowChart(flowChartDom, result_data['limes'], result_data['points']);
+						taxiFlowChart(flowChart, result_data['limes'], result_data['points']);
 
 						//get PassOutChart
+						taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
+						return _context.abrupt('return', { 'flowChart': flowChart, 'passChart': passChart });
 
-						passChart = taxiPassOutChart(passChartDom, result_data['in'], result_data['out'], flowChart);
-
-					case 28:
-					case "end":
+					case 33:
+					case 'end':
 						return _context.stop();
 				}
 			}
@@ -377,6 +389,45 @@ var getCharts = (function () {
 	}));
 
 	return function getCharts(_x) {
+		return ref.apply(this, arguments);
+	};
+})();
+
+var getChartByTime = (function () {
+	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(timestamp) {
+		var wuhan_od, result_data, flowChart, passChart;
+		return regeneratorRuntime.wrap(function _callee2$(_context2) {
+			while (1) {
+				switch (_context2.prev = _context2.next) {
+					case 0:
+						_context2.next = 2;
+						return getODData(timestamp);
+
+					case 2:
+						wuhan_od = _context2.sent;
+						result_data = processODData(wuhan_od);
+
+						console.log(result_data);
+
+						flowChart = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart"));
+						passChart = echarts.getInstanceByDom(document.getElementById("taxi-pass-chart"));
+						//get Flowchart
+
+						flowChart = taxiFlowChart(flowChart, result_data['limes'], result_data['points']);
+
+						//get PassOutChart
+
+						passChart = taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
+
+					case 9:
+					case 'end':
+						return _context2.stop();
+				}
+			}
+		}, _callee2, this);
+	}));
+
+	return function getChartByTime(_x2) {
 		return ref.apply(this, arguments);
 	};
 })();
@@ -391,16 +442,30 @@ var TaxiVisChart = (function () {
 
 		this.domId = domId;
 		$("#" + domId).show();
-		getCharts(domId);
+		var picker = $('.datepicker').pickadate({
+			format: 'yyyy-mm-dd',
+			selectMonths: true, // Creates a dropdown to control month
+			selectYears: 15, // Creates a dropdown of 15 years to control year
+			onClose: function onClose() {
+				var select_value = this.get('select');
+
+				getChartByTime(select_value.pick / 1000);
+			}
+		});
+
+		picker.pickadate('picker').set('select', new Date(2014, 0, 1));
+		var chartObj = getCharts(domId);
+		this.flowChart = chartObj.flowChart;
+		this.passChart = chartObj.passChart;
 	}
 
 	_createClass(TaxiVisChart, [{
-		key: "show",
+		key: 'show',
 		value: function show() {
 			$("#" + this.domId).show();
 		}
 	}, {
-		key: "hide",
+		key: 'hide',
 		value: function hide() {
 			$("#" + this.domId).hide();
 		}
@@ -436,42 +501,12 @@ function getGeojson(city) {
 	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city=" + city);
 }
 
-function getODData() {
-	return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php");
-	// .then(data => {
-	// 	var taxi_data = data;
-
-	// 	var draw_data = {};
-
-	// 	//calculate in/out between two district
-	// 	for(let i = 0,length = taxi_data.length;i<length;i++){
-	// 		var start_point = taxi_data[i];
-
-	// 		if(start_point.state !== 0){
-	// 			continue;
-	// 		}
-
-	// 		if(i >= length-1){
-	// 			break;
-	// 		}
-	// 		var end_point = taxi_data[i+1];
-	// 		if(start_point.district === ''||end_point.district === ''){
-	// 			continue;
-	// 		}
-	// 		if(draw_data[start_point.district]){
-	// 			if(draw_data[start_point.district][end_point.district]){
-	// 				draw_data[start_point.district][end_point.district] += 1;
-	// 			}else{
-	// 				draw_data[start_point.district][end_point.district] = 1;
-	// 			}
-	// 		}else{
-	// 			draw_data[start_point.district] = {};
-	// 			draw_data[start_point.district][end_point.district] = 1;
-	// 		}
-
-	// 		i++;	
-	// 	}
-	// });
+function getODData(timestamp) {
+	if (timestamp) {
+		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php?timestamp=" + timestamp);
+	} else {
+		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php");
+	}
 }
 
 function processODData(data) {
@@ -572,7 +607,7 @@ function processODData(data) {
 	};
 }
 
-function taxiFlowChart(dom, linesData, pointsData) {
+function taxiFlowChart(flowChart, linesData, pointsData) {
 
 	var option = {
 		backgroundColor: '#404a59',
@@ -594,7 +629,7 @@ function taxiFlowChart(dom, linesData, pointsData) {
 			orient: 'vertical',
 			top: 'bottom',
 			left: 'right',
-			data: ['洪山区'],
+			data: [],
 			textStyle: {
 				color: '#fff'
 			},
@@ -800,14 +835,15 @@ function taxiFlowChart(dom, linesData, pointsData) {
 			data: temp_point_data
 		});
 	}
-	var flowChart = echarts.init(dom);
+
 	option.series = series;
 	flowChart.setOption(option);
 	console.log(option);
+	flowChart.hideLoading();
 	return flowChart;
 }
 
-function taxiPassOutChart(dom, inData, outData, flowChart) {
+function taxiPassOutChart(passChart, inData, outData, flowChart) {
 	var option = {
 		title: {
 			text: '武汉各区出租车流入流出',
@@ -857,14 +893,15 @@ function taxiPassOutChart(dom, inData, outData, flowChart) {
 	var flowOption = flowChart.getOption();
 	option.xAxis[0].data = flowChart.getOption().legend[0].data;
 
-	var barChart = echarts.init(dom);
-	barChart.setOption(option);
-	barChart.on("click", function (e) {
+	passChart.setOption(option);
+
+	passChart.on("click", function (e) {
 		flowChart.dispatchAction({
 			'type': 'legendSelect',
 			'name': e.name
 		});
 	});
+	passChart.hideLoading();
 }
 // var districtLonLat = {
 // 	"海淀区":[116.299059,39.966493],
@@ -893,6 +930,43 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
+var initWeiboTextMap = (function () {
+    var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(map) {
+        var IDF, weibo_data;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+                switch (_context.prev = _context.next) {
+                    case 0:
+                        _context.next = 2;
+                        return getIdfData();
+
+                    case 2:
+                        IDF = _context.sent;
+                        _context.next = 5;
+                        return getWeiboData("武汉");
+
+                    case 5:
+                        weibo_data = _context.sent;
+
+                        getWeiboTextCluster(weibo_data, map, IDF);
+
+                    case 7:
+                    case "end":
+                        return _context.stop();
+                }
+            }
+        }, _callee, this);
+    }));
+
+    return function initWeiboTextMap(_x) {
+        return ref.apply(this, arguments);
+    };
+})();
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } step("next"); }); }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var WeiboTextMap = (function () {
@@ -902,15 +976,7 @@ var WeiboTextMap = (function () {
         this.domId = domId;
         $("#" + domId).show();
         var map = initMap(domId);
-        $.get("data/idf.txt", function (data) {
-            var split_array = data.split("\n");
-            var idfArray = [];
-            for (var i = 0; i < split_array.length; i++) {
-                var item = split_array[i].split(" ");
-                idfArray[item[0]] = parseInt(item[1]);
-            }
-            getWeiboData("北京", map, idfArray);
-        });
+        initWeiboTextMap(map);
     }
 
     _createClass(WeiboTextMap, [{
@@ -928,12 +994,35 @@ var WeiboTextMap = (function () {
     return WeiboTextMap;
 })();
 
+function getData(url) {
+    var promise = new Promise(function (resolve, reject) {
+        var client = new XMLHttpRequest();
+        client.open("GET", url);
+        client.onreadystatechange = handler;
+        client.send();
+
+        function handler() {
+            if (this.readyState !== 4) {
+                return;
+            }
+            if (this.status === 200) {
+                resolve(this.response);
+            } else {
+                reject(new Error(this.statusText));
+            }
+        };
+    });
+    return promise;
+}
+
+function getIdfData() {
+    return getData("data/idf.txt");
+}
 /**
  * map initialize
  * @param  {[string]} domId [map container dom id]
  * @return {[obj]}       [map object]
  */
-
 function initMap(domId) {
     L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
     var layer = L.mapbox.tileLayer('mapbox.streets');
@@ -992,10 +1081,8 @@ var Event3DMap = (function () {
  * @return {[null]}          [无]
  */
 
-function getWeiboData(city, map, idfArray) {
-    $.get('http://202.114.123.53/zx/weibo/getWeiboData.php', { 'city': '武汉' }).then(function (data) {
-        handleWeiboData(event.target.responseText, map, idfArray);
-    });
+function getWeiboData(city) {
+    return getData('http://202.114.123.53/zx/weibo/getWeiboData.php?city=' + city);
 }
 
 /**
@@ -1005,8 +1092,21 @@ function getWeiboData(city, map, idfArray) {
  * @param  {[Array]} idfArray [idf数据]
  * @return {[null]}          [null]
  */
-function handleWeiboData(data, map, idfArray) {
-    data = JSON.parse(data);
+function getWeiboTextCluster(data, map, idfData) {
+    // process the idf-data
+    var split_array = idfData.split("\n");
+    var idfArray = [];
+    console.log(typeof data === "undefined" ? "undefined" : _typeof(data));
+    for (var i = 0; i < split_array.length; i++) {
+        var item = split_array[i].split(" ");
+        idfArray[item[0]] = parseInt(item[1]);
+    }
+
+    if (typeof data === 'string') {
+        data = JSON.parse(data);
+    }
+
+    //get the MarkerClusterGroup
     var markers = new L.MarkerClusterGroup({
         showCoverageOnHover: false,
         zoomToBoundsOnClick: false,
@@ -1059,10 +1159,11 @@ function handleWeiboData(data, map, idfArray) {
         });
         markers.addLayer(marker);
     }
-    //绑定tooltip
+    //bind the tooltip to MarkerClusterGroup
     markers.on("clustermouseover", showWeiboDetail);
-    //markers.on("clustermouseout",hideWeiboDetail)
+
     map.addLayer(markers);
+    //hide the tooltip when mouse out the cluster or container
     map.on("mouseover", function (e) {
         $("#tooltip").hide();
     });
@@ -1120,10 +1221,6 @@ function showWeiboDetail(e) {
     }
 
     $("#tooltip-header").html("共" + related_weibo_num + "条相关微博");
-}
-function hideWeiboDetail(e) {
-    console.log("hide");
-    $("#tooltip").hide();
 }
 
 var wordsAndValue = [];
@@ -1255,4 +1352,4 @@ exports.Event3DMap = Event3DMap;
 
 
 
-//# sourceMappingURL=bundle.js.9ccfa44f.map
+//# sourceMappingURL=bundle.js.dc997304.map

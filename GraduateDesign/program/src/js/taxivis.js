@@ -1,8 +1,22 @@
-class TaxiVisChart{
+class TaxiVisChart {
 	constructor(domId){
 		this.domId = domId;
 		$("#"+domId).show();
-		getCharts(domId);
+		var picker = $('.datepicker').pickadate({
+			format: 'yyyy-mm-dd',
+		    selectMonths: true, // Creates a dropdown to control month
+		    selectYears: 15,// Creates a dropdown of 15 years to control year
+		    onClose: function(){
+		       var select_value = this.get('select');
+
+		       getChartByTime(select_value.pick/1000);
+		    }
+		});
+
+		picker.pickadate('picker').set('select',  new Date(2014, 0, 1))
+		var chartObj = getCharts(domId);
+		this.flowChart = chartObj.flowChart;
+		this.passChart = chartObj.passChart;
 	}
 	show(){
         $("#"+this.domId).show();
@@ -33,24 +47,50 @@ async function getCharts(domId){
 	rowdiv.appendChild(flowChartDom);
 	container.appendChild(rowdiv);
 
+	var flowChart = echarts.getInstanceByDom(flowChartDom);
+	if(!flowChart){
+		flowChart = echarts.init(flowChartDom);
+	}
+	flowChart.showLoading();
+
+	var passChart = echarts.getInstanceByDom(passChartDom);
+	if(!passChart){
+		passChart = echarts.init(passChartDom);
+	}
+	passChart.showLoading();
 	//get geojson of wuhan
 	var wuhan_map = await getGeojson("武汉市");
-	console.log(wuhan_map);
+
 
 	echarts.registerMap('wuhan', wuhan_map);
 	//get od-data of wuhan
 	var wuhan_od = await getODData();
-	console.log(wuhan_od);
+
 	var result_data = processODData(wuhan_od);
 
 	//get Flowchart
-	var flowChart = taxiFlowChart(flowChartDom,result_data['limes'],result_data['points']);
+	taxiFlowChart(flowChart,result_data['limes'],result_data['points']);
 	
 	//get PassOutChart
-	var passChart = taxiPassOutChart(passChartDom,result_data['in'],result_data['out'],flowChart);
-
-
+	taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
+	return { 'flowChart':flowChart,'passChart':passChart }
 }
+
+async function getChartByTime(timestamp){
+
+	var wuhan_od = await getODData(timestamp);
+	var result_data = processODData(wuhan_od);
+	console.log(result_data);
+
+	var flowChart = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart"));
+	var passChart = echarts.getInstanceByDom(document.getElementById("taxi-pass-chart"));
+	//get Flowchart
+	var flowChart = taxiFlowChart(flowChart,result_data['limes'],result_data['points']);
+	
+	//get PassOutChart
+	var passChart = taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
+}
+
 
 function getJSON(url){
 	var promise = new Promise(function(resolve, reject){
@@ -82,42 +122,13 @@ function getGeojson(city){
 }
 
 
-function getODData(){
-	return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php");
-	// .then(data => {
-	// 	var taxi_data = data;
-
-	// 	var draw_data = {};
-
-	// 	//calculate in/out between two district
-	// 	for(let i = 0,length = taxi_data.length;i<length;i++){
-	// 		var start_point = taxi_data[i];
-			
-	// 		if(start_point.state !== 0){
-	// 			continue;
-	// 		}
-
-	// 		if(i >= length-1){
-	// 			break;
-	// 		}
-	// 		var end_point = taxi_data[i+1];
-	// 		if(start_point.district === ''||end_point.district === ''){
-	// 			continue;
-	// 		}
-	// 		if(draw_data[start_point.district]){
-	// 			if(draw_data[start_point.district][end_point.district]){
-	// 				draw_data[start_point.district][end_point.district] += 1;
-	// 			}else{
-	// 				draw_data[start_point.district][end_point.district] = 1;
-	// 			}
-	// 		}else{
-	// 			draw_data[start_point.district] = {};
-	// 			draw_data[start_point.district][end_point.district] = 1;
-	// 		}
-
-	// 		i++;	
-	// 	}
-	// });
+function getODData(timestamp){
+	if(timestamp){
+		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php?timestamp="+timestamp);
+	}else{
+		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php");
+	}
+	
 }
 
 function processODData(data){
@@ -125,7 +136,7 @@ function processODData(data){
 
 	var draw_data = {};
 
-		//calculate in/out between two district
+	//calculate in/out between two district
 	for(let i = 0,length = taxi_data.length;i<length;i++){
 		var start_point = taxi_data[i];
 		
@@ -220,7 +231,7 @@ function processODData(data){
 }
 
 
-function taxiFlowChart(dom,linesData,pointsData){
+function taxiFlowChart(flowChart,linesData,pointsData){
 
 	var option = {
 	    backgroundColor: '#404a59',
@@ -242,7 +253,7 @@ function taxiFlowChart(dom,linesData,pointsData){
 	        orient: 'vertical',
 	        top: 'bottom',
 	        left: 'right',
-	        data:['洪山区'],
+	        data: [],
 	        textStyle: {
 	            color: '#fff'
 	        },
@@ -471,14 +482,15 @@ function taxiFlowChart(dom,linesData,pointsData){
 		    }
 		);
 	}
-	var flowChart = echarts.init(dom);
+	
 	option.series = series;
 	flowChart.setOption(option);
 	console.log(option);
+	flowChart.hideLoading();
 	return flowChart;
 }
 
-function taxiPassOutChart(dom,inData,outData,flowChart){
+function taxiPassOutChart(passChart,inData,outData,flowChart){
 	var option = {
 		title : {
 	        text: '武汉各区出租车流入流出',
@@ -532,14 +544,16 @@ function taxiPassOutChart(dom,inData,outData,flowChart){
 	var flowOption = flowChart.getOption();
 	option.xAxis[0].data = flowChart.getOption().legend[0].data;
 	
-	var barChart = echarts.init(dom);
-	barChart.setOption(option);
-	barChart.on("click",e => {
+	
+	passChart.setOption(option);
+
+	passChart.on("click",e => {
 		flowChart.dispatchAction({
 			'type':'legendSelect',
 			'name':e.name
 		})
 	});
+	passChart.hideLoading();
 }
 // var districtLonLat = {
 // 	"海淀区":[116.299059,39.966493],

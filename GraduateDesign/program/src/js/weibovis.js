@@ -3,16 +3,7 @@ class WeiboTextMap {
         this.domId = domId;
         $("#"+domId).show();
         var map = initMap(domId);
-        $.get("data/idf.txt",function(data){
-            var split_array=data.split("\n");
-            var idfArray=[];
-            for(var i=0;i<split_array.length;i++){
-                var item=split_array[i].split(" ");
-                idfArray[item[0]]=parseInt(item[1]);
-            }
-            getWeiboData("北京",map,idfArray);
-        });
-
+        initWeiboTextMap(map);
     }
     show(){
         $("#"+this.domId).show();
@@ -21,7 +12,36 @@ class WeiboTextMap {
         $("#"+this.domId).hide();
     }
 }
+async function initWeiboTextMap(map){
+    const IDF = await getIdfData();
+    var weibo_data = await getWeiboData("武汉");
+    getWeiboTextCluster(weibo_data,map,IDF);
+}
 
+function getData(url){
+    var promise = new Promise(function(resolve, reject){
+        var client = new XMLHttpRequest();
+        client.open("GET", url);
+        client.onreadystatechange = handler;
+        client.send();
+
+        function handler() {
+          if ( this.readyState !== 4 ) {
+            return;
+          }
+          if (this.status === 200) {
+            resolve(this.response);
+          } else {
+            reject(new Error(this.statusText));
+          }
+        };
+    });
+    return promise;
+}
+
+function getIdfData(){
+    return getData("data/idf.txt");
+}
 /**
  * map initialize
  * @param  {[string]} domId [map container dom id]
@@ -75,11 +95,8 @@ class  Event3DMap{
  * @param  {[string]} idfArray [idf的数组]
  * @return {[null]}          [无]
  */
-function getWeiboData (city,map,idfArray) {
-    $.get('http://202.114.123.53/zx/weibo/getWeiboData.php',{'city':'武汉'}).then(function(data){
-        handleWeiboData(event.target.responseText,map,idfArray);
-    });
-	
+function getWeiboData (city) {
+    return getData('http://202.114.123.53/zx/weibo/getWeiboData.php?city='+city);
 }
 
 /**
@@ -89,8 +106,21 @@ function getWeiboData (city,map,idfArray) {
  * @param  {[Array]} idfArray [idf数据]
  * @return {[null]}          [null]
  */
-function handleWeiboData(data,map,idfArray){
-	data=JSON.parse(data);
+function getWeiboTextCluster(data,map,idfData){
+    // process the idf-data
+    var split_array=idfData.split("\n");
+    var idfArray=[];
+    console.log(typeof data);
+    for(var i=0;i<split_array.length;i++){
+        var item=split_array[i].split(" ");
+        idfArray[item[0]]=parseInt(item[1]);
+    }
+
+    if(typeof data === 'string'){
+        data=JSON.parse(data);
+    }
+	
+    //get the MarkerClusterGroup
     var markers = new L.MarkerClusterGroup({
         showCoverageOnHover: false,
         zoomToBoundsOnClick: false,
@@ -144,10 +174,11 @@ function handleWeiboData(data,map,idfArray){
         markers.addLayer(marker);
 
 	}
-    //绑定tooltip
+    //bind the tooltip to MarkerClusterGroup
     markers.on("clustermouseover",showWeiboDetail);
-    //markers.on("clustermouseout",hideWeiboDetail)
+
     map.addLayer(markers);
+    //hide the tooltip when mouse out the cluster or container
     map.on("mouseover",function(e){
         $("#tooltip").hide();
     });
@@ -206,10 +237,6 @@ function showWeiboDetail(e){
 
    	$("#tooltip-header").html("共" + related_weibo_num + "条相关微博");
 
-}
-function hideWeiboDetail(e){
-    console.log("hide");
-    $("#tooltip").hide();
 }
 
 var wordsAndValue = [];
