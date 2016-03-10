@@ -306,7 +306,7 @@ function createHeatMap(data) {
 exports.PoiVisMap = PoiVisMap;
 
 },{}],4:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
 	value: true
@@ -316,7 +316,7 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 var getCharts = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(domId) {
-		var container, rowdiv, passChartDom, flowChartDom, flowChart, passChart, wuhan_map, wuhan_od, result_data;
+		var container, rowdiv, cal_heat_dom, passChartDom, flowChartDom, flowChart, passChart, wuhan_od, result_data;
 		return regeneratorRuntime.wrap(function _callee$(_context) {
 			while (1) {
 				switch (_context.prev = _context.next) {
@@ -325,10 +325,23 @@ var getCharts = (function () {
 						rowdiv = document.createElement("div");
 
 						rowdiv.className = 'row';
+
+						//cal-heatmap month
+						cal_heat_dom = document.createElement('div');
+						// cal_heat_dom.style.width = '500px';
+						// cal_heat_dom.style.height = '600px';
+
+						cal_heat_dom.id = 'cal-heatmap';
+						cal_heat_dom.className = 'col s4';
+						rowdiv.appendChild(cal_heat_dom);
+
+						//get cal-heat
+						getCalHeat(cal_heat_dom);
+
 						//Initialize
 						passChartDom = document.createElement('div');
+						// passChartDom.style.width = '500px';
 
-						passChartDom.style.width = '500px';
 						passChartDom.style.height = '600px';
 						passChartDom.id = 'taxi-pass-chart';
 						passChartDom.className = 'col s4';
@@ -341,6 +354,7 @@ var getCharts = (function () {
 						flowChartDom.id = 'taxi-flow-chart';
 						flowChartDom.className = 'col s4';
 						rowdiv.appendChild(flowChartDom);
+
 						container.appendChild(rowdiv);
 
 						flowChart = echarts.getInstanceByDom(flowChartDom);
@@ -356,20 +370,16 @@ var getCharts = (function () {
 							passChart = echarts.init(passChartDom);
 						}
 						passChart.showLoading();
-						//get geojson of wuhan
-						_context.next = 24;
-						return getGeojson("武汉市");
 
-					case 24:
-						wuhan_map = _context.sent;
-
-						echarts.registerMap('wuhan', wuhan_map);
 						//get od-data of wuhan
 						_context.next = 28;
 						return getODData();
 
 					case 28:
 						wuhan_od = _context.sent;
+
+						console.log(wuhan_od);
+
 						result_data = processODData(wuhan_od);
 
 						//get Flowchart
@@ -378,10 +388,10 @@ var getCharts = (function () {
 
 						//get PassOutChart
 						taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
-						return _context.abrupt('return', { 'flowChart': flowChart, 'passChart': passChart });
+						return _context.abrupt("return", { 'flowChart': flowChart, 'passChart': passChart });
 
-					case 33:
-					case 'end':
+					case 34:
+					case "end":
 						return _context.stop();
 				}
 			}
@@ -393,41 +403,111 @@ var getCharts = (function () {
 	};
 })();
 
-var getChartByTime = (function () {
-	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(timestamp) {
-		var wuhan_od, result_data, flowChart, passChart;
+var getCalHeat = (function () {
+	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(dom) {
+		var month_data, month_result, m, item, d, calMonth;
 		return regeneratorRuntime.wrap(function _callee2$(_context2) {
 			while (1) {
 				switch (_context2.prev = _context2.next) {
 					case 0:
 						_context2.next = 2;
-						return getODData(timestamp);
+						return getMonthData();
 
 					case 2:
-						wuhan_od = _context2.sent;
-						result_data = processODData(wuhan_od);
+						month_data = _context2.sent;
 
-						console.log(result_data);
+						console.log(month_data);
+						month_result = {};
 
-						flowChart = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart"));
-						passChart = echarts.getInstanceByDom(document.getElementById("taxi-pass-chart"));
-						//get Flowchart
+						for (m in month_data) {
+							month_result[m] = 0;
+							item = month_data[m];
 
-						flowChart = taxiFlowChart(flowChart, result_data['limes'], result_data['points']);
+							for (d in item) {
+								month_result[m] += item[d];
+							}
+						}
 
-						//get PassOutChart
+						calMonth = new CalHeatMap();
 
-						passChart = taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
+						calMonth.init({
+							itemSelector: dom,
+							domain: 'month',
+							start: new Date(2014, 0, 1, 0),
+							range: 1,
+							data: month_result,
+							subDomain: 'x_day',
+							highlight: "now",
+							cellSize: 40,
+							subDomainTextFormat: "%d",
+							legend: [20000, 23000, 26000, 29000, 32000, 35000],
+							legendColors: {
+								min: "green",
+								max: "red",
+								empty: "#ffffff",
+								base: "grey",
+								overflow: "grey"
+							},
+							onClick: function onClick(date, nb) {
+								if (nb === 0) {
+									return;
+								}
+								getChartByTime(date.getTime() / 1000);
+							}
+						});
 
-					case 9:
-					case 'end':
+					case 8:
+					case "end":
 						return _context2.stop();
 				}
 			}
 		}, _callee2, this);
 	}));
 
-	return function getChartByTime(_x2) {
+	return function getCalHeat(_x2) {
+		return ref.apply(this, arguments);
+	};
+})();
+
+var getChartByTime = (function () {
+	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(timestamp) {
+		var flowChart, passChart, wuhan_od, result_data;
+		return regeneratorRuntime.wrap(function _callee3$(_context3) {
+			while (1) {
+				switch (_context3.prev = _context3.next) {
+					case 0:
+						flowChart = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart"));
+						passChart = echarts.getInstanceByDom(document.getElementById("taxi-pass-chart"));
+
+						flowChart.showLoading();
+						passChart.showLoading();
+						_context3.next = 6;
+						return getODData(timestamp);
+
+					case 6:
+						wuhan_od = _context3.sent;
+						result_data = processODData(wuhan_od);
+
+						console.log(result_data);
+
+						//get Flowchart
+						taxiFlowChart(flowChart, result_data['limes'], result_data['points']);
+
+						//get PassOutChart
+						console.log(passChart);
+						taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
+						flowChart.hideLoading();
+						passChart.hideLoading();
+
+					case 14:
+					case "end":
+						return _context3.stop();
+				}
+			}
+		}, _callee3, this);
+	}));
+
+	return function getChartByTime(_x3) {
 		return ref.apply(this, arguments);
 	};
 })();
@@ -442,30 +522,18 @@ var TaxiVisChart = (function () {
 
 		this.domId = domId;
 		$("#" + domId).show();
-		var picker = $('.datepicker').pickadate({
-			format: 'yyyy-mm-dd',
-			selectMonths: true, // Creates a dropdown to control month
-			selectYears: 15, // Creates a dropdown of 15 years to control year
-			onClose: function onClose() {
-				var select_value = this.get('select');
-
-				getChartByTime(select_value.pick / 1000);
-			}
-		});
-
-		picker.pickadate('picker').set('select', new Date(2014, 0, 1));
 		var chartObj = getCharts(domId);
 		this.flowChart = chartObj.flowChart;
 		this.passChart = chartObj.passChart;
 	}
 
 	_createClass(TaxiVisChart, [{
-		key: 'show',
+		key: "show",
 		value: function show() {
 			$("#" + this.domId).show();
 		}
 	}, {
-		key: 'hide',
+		key: "hide",
 		value: function hide() {
 			$("#" + this.domId).hide();
 		}
@@ -501,6 +569,9 @@ function getGeojson(city) {
 	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city=" + city);
 }
 
+function getMonthData() {
+	return getJSON("http://202.114.123.53/zx/taxi/getDistrictDay.php");
+}
 function getODData(timestamp) {
 	if (timestamp) {
 		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php?timestamp=" + timestamp);
@@ -1367,4 +1438,4 @@ exports.Event3DMap = Event3DMap;
 
 
 
-//# sourceMappingURL=bundle.js.72fdbada.map
+//# sourceMappingURL=bundle.js.0deb5b4b.map

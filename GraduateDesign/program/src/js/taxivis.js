@@ -2,18 +2,6 @@ class TaxiVisChart {
 	constructor(domId){
 		this.domId = domId;
 		$("#"+domId).show();
-		var picker = $('.datepicker').pickadate({
-			format: 'yyyy-mm-dd',
-		    selectMonths: true, // Creates a dropdown to control month
-		    selectYears: 15,// Creates a dropdown of 15 years to control year
-		    onClose: function(){
-		       var select_value = this.get('select');
-
-		       getChartByTime(select_value.pick/1000);
-		    }
-		});
-
-		picker.pickadate('picker').set('select',  new Date(2014, 0, 1))
 		var chartObj = getCharts(domId);
 		this.flowChart = chartObj.flowChart;
 		this.passChart = chartObj.passChart;
@@ -31,9 +19,22 @@ async function getCharts(domId){
 
 	var rowdiv = document.createElement("div");
 	rowdiv.className = 'row';
+
+	//cal-heatmap month
+	var cal_heat_dom = document.createElement('div');
+	// cal_heat_dom.style.width = '500px';
+	// cal_heat_dom.style.height = '600px';
+	cal_heat_dom.id = 'cal-heatmap';
+	cal_heat_dom.className = 'col s4';
+	rowdiv.appendChild(cal_heat_dom);
+
+	//get cal-heat
+	getCalHeat(cal_heat_dom);
+
+
 	//Initialize
 	var passChartDom = document.createElement('div');
-	passChartDom.style.width = '500px';
+	// passChartDom.style.width = '500px';
 	passChartDom.style.height = '600px';
 	passChartDom.id = 'taxi-pass-chart';
 	passChartDom.className = 'col s4';
@@ -45,6 +46,7 @@ async function getCharts(domId){
 	flowChartDom.id = 'taxi-flow-chart';
 	flowChartDom.className = 'col s4';
 	rowdiv.appendChild(flowChartDom);
+
 	container.appendChild(rowdiv);
 
 	var flowChart = echarts.getInstanceByDom(flowChartDom);
@@ -58,13 +60,11 @@ async function getCharts(domId){
 		passChart = echarts.init(passChartDom);
 	}
 	passChart.showLoading();
-	//get geojson of wuhan
-	var wuhan_map = await getGeojson("武汉市");
 
-
-	echarts.registerMap('wuhan', wuhan_map);
 	//get od-data of wuhan
 	var wuhan_od = await getODData();
+
+	console.log(wuhan_od);
 
 	var result_data = processODData(wuhan_od);
 
@@ -76,19 +76,64 @@ async function getCharts(domId){
 	return { 'flowChart':flowChart,'passChart':passChart }
 }
 
-async function getChartByTime(timestamp){
+async function getCalHeat(dom){
+	var month_data = await getMonthData();
+	console.log(month_data);
+	var month_result ={};
+	for(var m in month_data){
+		month_result[m] = 0;
+		var item = month_data[m]
+		for(var d in item){
+			month_result[m] += item[d];
+		}
+	}
 
+	var calMonth = new CalHeatMap();
+	calMonth.init({
+		itemSelector: dom,
+		domain: 'month',
+		start: new Date(2014,0,1,0),
+		range: 1,
+		data:month_result,
+		subDomain: 'x_day',
+		highlight: "now",
+        cellSize: 40, 
+        subDomainTextFormat: "%d",
+        legend: [20000,23000,26000,29000,32000,35000],
+        legendColors: {
+           min: "green",
+           max: "red",
+           empty: "#ffffff",
+           base: "grey",
+           overflow: "grey"
+        },
+        onClick: function(date,nb){
+        	if(nb === 0){
+        		return ;
+        	}
+        	getChartByTime(date.getTime()/1000);
+
+        }
+	});
+}
+async function getChartByTime(timestamp){
+	var flowChart = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart"));
+	var passChart = echarts.getInstanceByDom(document.getElementById("taxi-pass-chart"));
+	flowChart.showLoading();
+	passChart.showLoading();
 	var wuhan_od = await getODData(timestamp);
 	var result_data = processODData(wuhan_od);
 	console.log(result_data);
 
-	var flowChart = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart"));
-	var passChart = echarts.getInstanceByDom(document.getElementById("taxi-pass-chart"));
+	
 	//get Flowchart
-	var flowChart = taxiFlowChart(flowChart,result_data['limes'],result_data['points']);
+	taxiFlowChart(flowChart,result_data['limes'],result_data['points']);
 	
 	//get PassOutChart
-	var passChart = taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
+	console.log(passChart);
+	taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
+	flowChart.hideLoading();
+	passChart.hideLoading();
 }
 
 
@@ -121,7 +166,9 @@ function getGeojson(city){
 	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city="+city);
 }
 
-
+function getMonthData(){
+	return getJSON("http://202.114.123.53/zx/taxi/getDistrictDay.php");
+}
 function getODData(timestamp){
 	if(timestamp){
 		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php?timestamp="+timestamp);

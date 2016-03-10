@@ -21,7 +21,7 @@ DAT.Globe = function(container, opts) {
     c.setHSL( ( 0.6 - ( x * 0.5 ) ), 1.0, 0.5 );
     return c;
   };
-  var imgDir = opts.imgDir || 'globe/';
+  var imgDir = opts.imgDir || 'vendor/webgl-globe/';
 
   var Shaders = {
     'earth' : {
@@ -81,7 +81,13 @@ DAT.Globe = function(container, opts) {
       target = { x: Math.PI*3/2, y: Math.PI / 6.0 },
       targetOnDown = { x: 0, y: 0 };
 
+  
   var distance = 100000, distanceTarget = 100000;
+
+  //change by lidonglin
+  target.x = 0.2;
+  distanceTarget = 500;
+  
   var padding = 40;
   var PI_HALF = Math.PI / 2;
 
