@@ -489,6 +489,7 @@ var getChartByTime = (function () {
 						result_data = processODData(wuhan_od);
 
 						console.log(result_data);
+						getDayHeatMap(wuhan_od);
 
 						//get Flowchart
 						taxiFlowChart(flowChart, result_data['limes'], result_data['points']);
@@ -499,7 +500,7 @@ var getChartByTime = (function () {
 						flowChart.hideLoading();
 						passChart.hideLoading();
 
-					case 14:
+					case 15:
 					case "end":
 						return _context3.stop();
 				}
@@ -541,6 +542,52 @@ var TaxiVisChart = (function () {
 
 	return TaxiVisChart;
 })();
+
+function getDayHeatMap(odData) {
+	var origintime = odData[0].time_point;
+	var origindate = new Date(origintime * 1000);
+	var starttime = new Date(origindate.getFullYear(), origindate.getMonth(), origindate.getDate(), 0).getTime() / 1000;
+	var day_heat_data = {};
+	for (var d = 0; d < odData.length; d++) {
+		var item = odData[d];
+		var index = parseInt((item.time_point - origintime) / 3600);
+		if (day_heat_data[starttime + index * 3600] >= 0) {
+			day_heat_data[starttime + index * 3600] += 1;
+		} else {
+			day_heat_data[starttime + index * 3600] = 0;
+		}
+	}
+	console.log(day_heat_data);
+	var cal_haat_container = document.getElementById("cal-heatmap");
+	var dayElement = document.getElementById('day-calheat');
+	if (dayElement) {
+		dayElement.innerHTML = '';
+	} else {
+		var dayElement = document.createElement("div");
+		dayElement.id = 'day-calheat';
+	}
+	cal_haat_container.appendChild(dayElement);
+	var calMonth = new CalHeatMap();
+	calMonth.init({
+		itemSelector: dayElement,
+		domain: 'day',
+		start: new Date(starttime * 1000),
+		range: 1,
+		data: day_heat_data,
+		subDomain: 'x_hour',
+		highlight: "now",
+		cellSize: 40,
+		subDomainTextFormat: "%d",
+		legend: [500, 1000, 1200, 1300, 1400, 1500],
+		legendColors: {
+			min: "green",
+			max: "red",
+			empty: "#ffffff",
+			base: "grey",
+			overflow: "grey"
+		}
+	});
+}
 
 function getJSON(url) {
 	var promise = new Promise(function (resolve, reject) {
