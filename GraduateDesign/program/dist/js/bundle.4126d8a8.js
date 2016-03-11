@@ -1092,8 +1092,6 @@ var initWeiboTextMap = (function () {
  * @return {[Object]}     [promise Object]
  */
 
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1229,7 +1227,7 @@ function getWeiboTextCluster(data, map, idfData) {
     // process the idf-data
     var split_array = idfData.split("\n");
     var idfArray = [];
-    console.log(typeof data === "undefined" ? "undefined" : _typeof(data));
+
     for (var i = 0; i < split_array.length; i++) {
         var item = split_array[i].split(" ");
         idfArray[item[0]] = parseInt(item[1]);
@@ -1485,4 +1483,4 @@ exports.Event3DMap = Event3DMap;
 
 
 
-//# sourceMappingURL=bundle.js.671a42c1.map
+//# sourceMappingURL=bundle.js.174e0270.map

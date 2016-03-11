@@ -18,6 +18,12 @@ import gulpif from 'gulp-if';
 import del from 'del';
 import precss from 'precss';
 import jshint from 'gulp-jshint';
+import ghPages from 'gulp-gh-pages';
+ 
+gulp.task('deploy', function() {
+  return gulp.src('./dist/**/*')
+    .pipe(ghPages({"remoteUrl":"git@github.com:ldllidonglin/workspace.git"}));
+});
 
 var watcher = gulp.watch(['src/css/index.css','src/js/poivis.js','src/js/taxivis.js','src/js/weibovis.js','src/js/index.js','src/index.html'], ['rev']);
 

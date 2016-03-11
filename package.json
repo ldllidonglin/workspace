@@ -1,11 +1,15 @@
 {
-  "name": "graduate-design-program",
+  "name": "workspace",
   "version": "1.0.0",
-  "description": "graduate-design-program",
+  "description": "workspace",
   "main": "index.js",
   "scripts": {
     "build": "gulp",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d GraduateDesign/program/dist"
+  },
+  "repository" :{ 
+    "type" : "git",
+    "url" : "git@github.com:ldllidonglin/workspace.git"
   },
   "author": "李冬琳",
   "license": "ISC",
@@ -22,7 +26,6 @@
     "gh-pages": "^0.11.0",
     "gulp": "^3.9.0",
     "gulp-cssnano": "^2.1.0",
-    "gulp-gh-pages": "^0.5.4",
     "gulp-if": "^2.0.0",
     "gulp-jshint": "^2.0.0",
     "gulp-postcss": "^6.0.1",
