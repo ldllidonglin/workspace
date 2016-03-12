@@ -1,5 +1,5 @@
 import { WeiboTextMap,Event3DMap } from './weibovis.js';
-import { layoutIni } from './layout.js';
+import { layoutInit } from './layout.js';
 import { TaxiVisChart } from './taxiVis.js';
 import { PoiVisMap } from './poivis.js';
 
@@ -18,7 +18,6 @@ $("#textvis-list").on("click",e =>{
         case "weibo-text-vis":
             cleanMainWindow();
             if(INITOBJ.textmap){
-               
                 INITOBJ.textmap.show();
             }else{
                 var text_map = new WeiboTextMap("weibo-text-map");
@@ -79,4 +78,8 @@ function cleanMainWindow(){
     }
 }
 //main window initialize
-layoutIni();
+layoutInit();
+
+// Initialize the index page
+var text_map = new WeiboTextMap("weibo-text-map");
+INITOBJ.textmap = text_map;

@@ -40,6 +40,8 @@ function getData(url){
           }
           if (this.status === 200) {
             resolve(this.response);
+          } else if(this.status === 500){
+            alert("数据加载出错，请刷新浏览器");
           } else {
             reject(new Error(this.statusText));
           }
@@ -64,7 +66,17 @@ function initMap(domId){
     L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
     var layer = L.mapbox.tileLayer('mapbox.streets');
     var layer_satelite = L.mapbox.tileLayer('mapbox.streets-satellite');
-    var map = L.mapbox.map(domId).setView([30.608623,114.274462], 11).addLayer(layer);
+    var map = L.mapbox.map(domId).setView([30.590623,114.274462], 11).addLayer(layer);
+    //append the title of map
+    var container = document.getElementById(domId);
+    var width = container.clientWidth;
+    var title = document.createElement("div");
+    title.style.position = "absolute";
+    title.style.left = (width/2 - 183) +"px";
+    title.style.fontSize = "24px";
+    title.style.color = "chocolate";
+    title.textContent = "武汉近24小时微博聚合可视化结果"
+    container.appendChild(title);
 
     return map;
 }
@@ -123,9 +135,8 @@ function getWeiboTextCluster(data,map,idfData){
     // process the idf-data
     var split_array=idfData.split("\n");
     var idfArray=[];
-    console.log(typeof data);
     for(var i=0;i<split_array.length;i++){
-        var item=split_array[i].split(" ");
+        let item=split_array[i].split(" ");
         idfArray[item[0]]=parseInt(item[1]);
     }
 
@@ -168,7 +179,7 @@ function getWeiboTextCluster(data,map,idfData){
     
     //add marker to markers
 	for(var x in data){
-		var item=data[x];
+		let item=data[x];
 		var lat=item.geo.coordinates[0];
 		var lon=item.geo.coordinates[1];
    		var re=/\[.*\]/g;

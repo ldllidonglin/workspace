@@ -15,7 +15,7 @@ class PoiVisMap {
 				points.push([lat,lon]);
 				heatMapPoint.push([lat,lon,100.0]);
 			}
-			console.log(points.length);
+
 			var heatMap = createHeatMap(heatMapPoint);
 			map.addLayer(heatMap);
 			
@@ -110,7 +110,7 @@ function createCluster(data){
 }
 
 /**
- * 创建cluster的lens
+ * create the cluster's lens
  * @param  {Object} cluster  [the cluster Object]
  * @param  {Object} map      [map object]
  * @param  {String} lendomId [lens's container ]
@@ -171,16 +171,34 @@ function createClusterLens(cluster,map,lendomId){
  * @return {[Object]}      [heatLayer]
  */
 function createHeatMap(data){
-	var gradient = {
-		0.5:'#c7f127',
-		0.55:'#daf127',
-		0.6:'#f3f73b',
-		0.7:'#FBEF0E',
-		0.8:'#FFD700',
-		0.98:'#f48e1a',
-		1:'red'
-	};
-	var heat = L.heatLayer(data, {radius:15,gradient:gradient});
+	var heat, gradient;
+	if(data.length <500){
+		gradient = {
+			0.05:'#c7f127',
+			0.1:'#daf127',
+			0.2:'#f3f73b',
+			0.4:'#FBEF0E',
+			0.6:'#FFD700',
+			0.8:'#f48e1a',
+			1:'red'
+		};
+		heat = L.heatLayer(data, {radius:35,gradient:gradient});
+	}
+	else if(data.length >= 1000){
+		gradient = {
+			0.5:'#c7f127',
+			0.55:'#daf127',
+			0.6:'#f3f73b',
+			0.7:'#FBEF0E',
+			0.8:'#FFD700',
+			0.98:'#f48e1a',
+			1:'red'
+		};
+		heat = L.heatLayer(data, {radius:15,gradient:gradient});
+	}else{
+		heat = L.heatLayer(data, {radius:15});
+	}
+	
 	return heat;
 }
 

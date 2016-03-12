@@ -48,7 +48,6 @@ async function getCharts(domId){
 	rowdiv.appendChild(passChartDom);
 
 	var flowChartDom = document.createElement('div');
-	flowChartDom.style.width = '500px';
 	flowChartDom.style.height = '600px';
 	flowChartDom.id = 'taxi-flow-chart';
 	flowChartDom.className = 'col s4';
