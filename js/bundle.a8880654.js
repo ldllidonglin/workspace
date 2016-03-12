@@ -23,7 +23,6 @@ $("#textvis-list").on("click", function (e) {
         case "weibo-text-vis":
             cleanMainWindow();
             if (INITOBJ.textmap) {
-
                 INITOBJ.textmap.show();
             } else {
                 var text_map = new _weibovis.WeiboTextMap("weibo-text-map");
@@ -83,7 +82,11 @@ function cleanMainWindow() {
     }
 }
 //main window initialize
-(0, _layout.layoutIni)();
+(0, _layout.layoutInit)();
+
+// Initialize the index page
+var text_map = new _weibovis.WeiboTextMap("weibo-text-map");
+INITOBJ.textmap = text_map;
 
 },{"./layout.js":2,"./poivis.js":3,"./taxiVis.js":4,"./weibovis.js":5}],2:[function(require,module,exports){
 "use strict";
@@ -91,14 +94,14 @@ function cleanMainWindow() {
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-function layoutIni() {
+function layoutInit() {
 	var clientHeight = document.body.clientHeight;
 	var navHeight = $("nav").height();
 	var mainHeight = clientHeight - navHeight - 15;
 	$("#main").height(mainHeight);
 }
 
-exports.layoutIni = layoutIni;
+exports.layoutInit = layoutInit;
 
 },{}],3:[function(require,module,exports){
 "use strict";
@@ -129,7 +132,7 @@ var PoiVisMap = (function () {
 				points.push([lat, lon]);
 				heatMapPoint.push([lat, lon, 100.0]);
 			}
-			console.log(points.length);
+
 			var heatMap = createHeatMap(heatMapPoint);
 			map.addLayer(heatMap);
 
@@ -229,7 +232,7 @@ function createCluster(data) {
 }
 
 /**
- * 创建cluster的lens
+ * create the cluster's lens
  * @param  {Object} cluster  [the cluster Object]
  * @param  {Object} map      [map object]
  * @param  {String} lendomId [lens's container ]
@@ -290,16 +293,33 @@ function createClusterLens(cluster, map, lendomId) {
  * @return {[Object]}      [heatLayer]
  */
 function createHeatMap(data) {
-	var gradient = {
-		0.5: '#c7f127',
-		0.55: '#daf127',
-		0.6: '#f3f73b',
-		0.7: '#FBEF0E',
-		0.8: '#FFD700',
-		0.98: '#f48e1a',
-		1: 'red'
-	};
-	var heat = L.heatLayer(data, { radius: 15, gradient: gradient });
+	var heat, gradient;
+	if (data.length < 500) {
+		gradient = {
+			0.05: '#c7f127',
+			0.1: '#daf127',
+			0.2: '#f3f73b',
+			0.4: '#FBEF0E',
+			0.6: '#FFD700',
+			0.8: '#f48e1a',
+			1: 'red'
+		};
+		heat = L.heatLayer(data, { radius: 35, gradient: gradient });
+	} else if (data.length >= 1000) {
+		gradient = {
+			0.5: '#c7f127',
+			0.55: '#daf127',
+			0.6: '#f3f73b',
+			0.7: '#FBEF0E',
+			0.8: '#FFD700',
+			0.98: '#f48e1a',
+			1: 'red'
+		};
+		heat = L.heatLayer(data, { radius: 15, gradient: gradient });
+	} else {
+		heat = L.heatLayer(data, { radius: 15 });
+	}
+
 	return heat;
 }
 
@@ -313,6 +333,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+/**
+ * get the charts of taxi-vis
+ * @param  {[string]} domId [dom's id of container]
+ * @return {[objct]}       [flowchart passchart]
+ */
 
 var getCharts = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(domId) {
@@ -349,7 +375,6 @@ var getCharts = (function () {
 
 						flowChartDom = document.createElement('div');
 
-						flowChartDom.style.width = '500px';
 						flowChartDom.style.height = '600px';
 						flowChartDom.id = 'taxi-flow-chart';
 						flowChartDom.className = 'col s4';
@@ -372,10 +397,10 @@ var getCharts = (function () {
 						passChart.showLoading();
 
 						//get od-data of wuhan
-						_context.next = 28;
+						_context.next = 27;
 						return getODData();
 
-					case 28:
+					case 27:
 						wuhan_od = _context.sent;
 
 						console.log(wuhan_od);
@@ -390,7 +415,7 @@ var getCharts = (function () {
 						taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
 						return _context.abrupt("return", { 'flowChart': flowChart, 'passChart': passChart });
 
-					case 34:
+					case 33:
 					case "end":
 						return _context.stop();
 				}
@@ -402,6 +427,11 @@ var getCharts = (function () {
 		return ref.apply(this, arguments);
 	};
 })();
+/**
+ * get the calheat
+ * @param  {[string]} dom [dom's id of calheat container]
+ * @return {[null]}     [null]
+ */
 
 var getCalHeat = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(dom) {
@@ -468,6 +498,11 @@ var getCalHeat = (function () {
 		return ref.apply(this, arguments);
 	};
 })();
+/**
+ * get the day-calheat by time 
+ * @param  {[int]} timestamp [timestamp]
+ * @return {[null]}           [null]
+ */
 
 var getChartByTime = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(timestamp) {
@@ -512,10 +547,19 @@ var getChartByTime = (function () {
 		return ref.apply(this, arguments);
 	};
 })();
+/**
+ * [getDayHeatMap by data]
+ * @param  {[Array]} odData [[obj,obj]]]
+ * @return {[null]}        [null]
+ */
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * the class of taxi-vis
+ */
 
 var TaxiVisChart = (function () {
 	function TaxiVisChart(domId) {
@@ -589,6 +633,11 @@ function getDayHeatMap(odData) {
 	});
 }
 
+/**
+ * get the json data by url
+ * @param  {[String]} url [url]
+ * @return {[Promise]}     [proimise object]
+ */
 function getJSON(url) {
 	var promise = new Promise(function (resolve, reject) {
 		var client = new XMLHttpRequest();
@@ -612,13 +661,26 @@ function getJSON(url) {
 	return promise;
 }
 
+/**
+ * get the geojson of city
+ * @param  {[String]} city [the name of city]
+ * @return {[Promise]}      [Promise Object]
+ */
 function getGeojson(city) {
 	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city=" + city);
 }
-
+/**
+ * get the month data 
+ * @return {[Promise]} [Promise obj]
+ */
 function getMonthData() {
 	return getJSON("http://202.114.123.53/zx/taxi/getDistrictDay.php");
 }
+/**
+ * get the od data
+ * @param  {[int]} timestamp [timestamp]
+ * @return {[type]}           [description]
+ */
 function getODData(timestamp) {
 	if (timestamp) {
 		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php?timestamp=" + timestamp);
@@ -1092,8 +1154,6 @@ var initWeiboTextMap = (function () {
  * @return {[Object]}     [promise Object]
  */
 
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1136,6 +1196,8 @@ function getData(url) {
             }
             if (this.status === 200) {
                 resolve(this.response);
+            } else if (this.status === 500) {
+                alert("数据加载出错，请刷新浏览器");
             } else {
                 reject(new Error(this.statusText));
             }
@@ -1160,7 +1222,17 @@ function initMap(domId) {
     L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
     var layer = L.mapbox.tileLayer('mapbox.streets');
     var layer_satelite = L.mapbox.tileLayer('mapbox.streets-satellite');
-    var map = L.mapbox.map(domId).setView([30.608623, 114.274462], 11).addLayer(layer);
+    var map = L.mapbox.map(domId).setView([30.590623, 114.274462], 11).addLayer(layer);
+    //append the title of map
+    var container = document.getElementById(domId);
+    var width = container.clientWidth;
+    var title = document.createElement("div");
+    title.style.position = "absolute";
+    title.style.left = width / 2 - 183 + "px";
+    title.style.fontSize = "24px";
+    title.style.color = "chocolate";
+    title.textContent = "武汉近24小时微博聚合可视化结果";
+    container.appendChild(title);
 
     return map;
 }
@@ -1229,7 +1301,6 @@ function getWeiboTextCluster(data, map, idfData) {
     // process the idf-data
     var split_array = idfData.split("\n");
     var idfArray = [];
-    console.log(typeof data === "undefined" ? "undefined" : _typeof(data));
     for (var i = 0; i < split_array.length; i++) {
         var item = split_array[i].split(" ");
         idfArray[item[0]] = parseInt(item[1]);
@@ -1485,4 +1556,4 @@ exports.Event3DMap = Event3DMap;
 
 
 
-//# sourceMappingURL=bundle.js.671a42c1.map
+//# sourceMappingURL=bundle.js.8fa6d430.map
