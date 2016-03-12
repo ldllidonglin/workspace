@@ -4,7 +4,6 @@
   "description": "graduate-design-program",
   "main": "index.js",
   "scripts": {
-    "build": "gulp",
     "deploy": "gh-pages -d dist"
   },
   "author": "李冬琳",
@@ -19,10 +18,8 @@
     "browserify": "^12.0.1",
     "cssnano": "^3.4.0",
     "del": "^2.2.0",
-    "gh-pages": "^0.11.0",
     "gulp": "^3.9.0",
     "gulp-cssnano": "^2.1.0",
-    "gulp-gh-pages": "^0.5.4",
     "gulp-if": "^2.0.0",
     "gulp-jshint": "^2.0.0",
     "gulp-postcss": "^6.0.1",

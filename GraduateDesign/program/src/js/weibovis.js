@@ -1,6 +1,3 @@
-/**
- * the class of weibo-text-map 
- */
 class WeiboTextMap {
     constructor(domId){
         this.domId = domId;
@@ -72,9 +69,6 @@ function initMap(domId){
     return map;
 }
 
-/**
- * the class of event-3d-map
- */
 class  Event3DMap{
     constructor(domId){
         this.domId = domId;
@@ -108,28 +102,30 @@ class  Event3DMap{
 }
 
 /**
- * get weibo-data
- * @param  {[String]} city     [city name]
- * @return {[Object]}          [Promise Object]
+ * 获取微博数据
+ * @param  {[string]} city     [城市名]
+ * @param  {[obj]} map      [地图对象]
+ * @param  {[string]} idfArray [idf的数组]
+ * @return {[null]}          [无]
  */
 function getWeiboData (city) {
     return getData('http://202.114.123.53/zx/weibo/getWeiboData.php?city='+city);
 }
 
 /**
- * get the weibo-text cluster map
- * @param  {[Array]} data     [weibo-data:[{text:..,geo:..},{}]]
- * @param  {[Object]} map      [leaflet map obj]
- * @param  {[Array]} idfArray [idf]
+ * 获取微博数据 回调函数
+ * @param  {[Array]} data     [微博数据:[{text:..,geo:..},{}]]
+ * @param  {[Object]} map      [leaflet地图对象]
+ * @param  {[Array]} idfArray [idf数据]
  * @return {[null]}          [null]
  */
 function getWeiboTextCluster(data,map,idfData){
     // process the idf-data
     var split_array=idfData.split("\n");
     var idfArray=[];
-
+    console.log(typeof data);
     for(var i=0;i<split_array.length;i++){
-        let item=split_array[i].split(" ");
+        var item=split_array[i].split(" ");
         idfArray[item[0]]=parseInt(item[1]);
     }
 
@@ -147,7 +143,7 @@ function getWeiboTextCluster(data,map,idfData){
             for(var i=0,length = markers.length;i<length;i++){
                 allText += markers[i].options.title;
             }
-            var innerTag=wordSeg(allText,idfArray);
+            var innerTag=wordseg(allText,idfArray);
             var c = ' marker-cluster-';
             if (length < 10) {
                 c += 'small';
@@ -172,7 +168,7 @@ function getWeiboTextCluster(data,map,idfData){
     
     //add marker to markers
 	for(var x in data){
-		let item=data[x];
+		var item=data[x];
 		var lat=item.geo.coordinates[0];
 		var lon=item.geo.coordinates[1];
    		var re=/\[.*\]/g;
@@ -204,11 +200,6 @@ function getWeiboTextCluster(data,map,idfData){
     });
 }
 
-/**
- * show the cluster detail
- * @param  {[Object]} e [mouse event]
- * @return {[null]}   [null]
- */
 function showWeiboDetail(e){
 
 	var tooltip = $("#tooltip");
@@ -217,14 +208,14 @@ function showWeiboDetail(e){
     var map_container = e.target._map._container;
     var point = e.target._map.latLngToContainerPoint(e.latlng);
 
-    //get the current markers
+    //获取当前的markers
     var currentMarkers = e.layer.getAllChildMarkers();
 
 	tooltip.css("left",point.x+map_container.offsetLeft);
 	tooltip_content.css("width",'200px');
 	tooltip.css("width",'205px');
 	
-    //set the position of tooltip
+    //如果point在下方，为避免出现tips超出主图区域，故让tips左下角定位在center
     if(map_container.clientHeight-point.y<=250){
         tooltip.css("top",point.y-250);
     }else{
@@ -236,7 +227,7 @@ function showWeiboDetail(e){
 	var related_weibo_num=0;
 	tooltip.show();
     var centerReg = new RegExp(centerText,'g');
-    //set the content of tooltip
+    //填充内容并高亮关键字
    	for(var i=0,length = currentMarkers.length;i<length;i++){
    		var marker = currentMarkers[i];
    		var text = marker.options.title;
@@ -248,7 +239,7 @@ function showWeiboDetail(e){
    		}
    	}
     var text_item = $('.weibo-text-item:last-child');
-    //set the hight
+    //如果内容高度超出范围，设定具体高度出现overflow，否则tips的高度就是内容的实际高度
     if(text_item[0].offsetTop>190){
         tooltip.css("height",'245px');
         tooltip_content.css("height",'200px');
@@ -266,8 +257,8 @@ var wordsOnly = [];
 var valueOnly = [];
 
 
-//word-seg
-function wordSeg(allText,idfArray){
+//实现分词并统计个数
+function wordseg(allText,idfArray){
 	
     //loaddic();
     var list = [];
@@ -304,10 +295,11 @@ function wordSeg(allText,idfArray){
     }
 
     var terms = Object.create(null);
-
+    //console.log(text);
+    //把中文分开
     var regexp = /[^\u4E00-\u9FFF\u3400-\u4DBF]+/g;
     text = text.replace(regexp, '\n');
-
+    //console.log(text);
     
     stopWords.forEach(function (stopWord) {
         if (!(/^[\u4E00-\u9FFF\u3400-\u4DBF]+$/).test(stopWord))
@@ -316,18 +308,18 @@ function wordSeg(allText,idfArray){
 
     });
     text = text.replace(/a+/g,'\n');
-
+    //console.log(text);
     var chunks = text.split(/\n+/);
     var pendingTerms = Object.create(null);
     chunks.forEach(function processChunk(chunk) {
         if (chunk.length <= 1)
             return;
         var substrings = [];
-
+        //console.log(chunk);
         substrings = getAllSubStrings(chunk, 5);
-
+        //console.log(substrings);
         substrings.forEach(function (substr) {
-            if (substr.length <= 1)   //filter by string length
+            if (substr.length <= 1)   //不取单个字的词
                 return;
             if (!(substr in pendingTerms))
                 pendingTerms[substr] = 0;     
@@ -379,10 +371,10 @@ function wordSeg(allText,idfArray){
 }
 
 /**
- * get the substring of  string
- * @param  {string} str [the parent string]
- * @param  {int} maxLength maxLength of one process
- * @return {array} result the array of substring
+ * 获得字符串的子串
+ * @param  {string} str 需要处理的字符串
+ * @param  {int} maxLength 一次处理的最长长度
+ * @return {array} result 子串组成的数组 
  */
 function getAllSubStrings(str, maxLength) {
     if (!str.length)
