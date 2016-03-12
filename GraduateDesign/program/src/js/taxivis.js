@@ -1,3 +1,6 @@
+/**
+ * the class of taxi-vis
+ */
 class TaxiVisChart {
 	constructor(domId){
 		this.domId = domId;
@@ -13,7 +16,11 @@ class TaxiVisChart {
         $("#"+this.domId).hide();
     }
 }
-
+/**
+ * get the charts of taxi-vis
+ * @param  {[string]} domId [dom's id of container]
+ * @return {[objct]}       [flowchart passchart]
+ */
 async function getCharts(domId){
 	var container = document.getElementById(domId);
 
@@ -75,7 +82,11 @@ async function getCharts(domId){
 	taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
 	return { 'flowChart':flowChart,'passChart':passChart }
 }
-
+/**
+ * get the calheat
+ * @param  {[string]} dom [dom's id of calheat container]
+ * @return {[null]}     [null]
+ */
 async function getCalHeat(dom){
 	var month_data = await getMonthData();
 	console.log(month_data);
@@ -116,6 +127,11 @@ async function getCalHeat(dom){
         }
 	});
 }
+/**
+ * get the day-calheat by time 
+ * @param  {[int]} timestamp [timestamp]
+ * @return {[null]}           [null]
+ */
 async function getChartByTime(timestamp){
 	var flowChart = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart"));
 	var passChart = echarts.getInstanceByDom(document.getElementById("taxi-pass-chart"));
@@ -135,7 +151,11 @@ async function getChartByTime(timestamp){
 	flowChart.hideLoading();
 	passChart.hideLoading();
 }
-
+/**
+ * [getDayHeatMap by data]
+ * @param  {[Array]} odData [[obj,obj]]]
+ * @return {[null]}        [null]
+ */
 function getDayHeatMap(odData){
 	var origintime = odData[0].time_point;
 	var origindate = new Date(origintime*1000);
@@ -183,7 +203,11 @@ function getDayHeatMap(odData){
 
 }
 
-
+/**
+ * get the json data by url
+ * @param  {[String]} url [url]
+ * @return {[Promise]}     [proimise object]
+ */
 function getJSON(url){
 	var promise = new Promise(function(resolve, reject){
 	    var client = new XMLHttpRequest();
@@ -208,14 +232,26 @@ function getJSON(url){
 }
 
 
-
+/**
+ * get the geojson of city
+ * @param  {[String]} city [the name of city]
+ * @return {[Promise]}      [Promise Object]
+ */
 function getGeojson(city){
 	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city="+city);
 }
-
+/**
+ * get the month data 
+ * @return {[Promise]} [Promise obj]
+ */
 function getMonthData(){
 	return getJSON("http://202.114.123.53/zx/taxi/getDistrictDay.php");
 }
+/**
+ * get the od data
+ * @param  {[int]} timestamp [timestamp]
+ * @return {[type]}           [description]
+ */
 function getODData(timestamp){
 	if(timestamp){
 		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php?timestamp="+timestamp);
