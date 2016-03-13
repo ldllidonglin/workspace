@@ -114,6 +114,10 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+/**
+ * the class of poi-vis-map
+ */
+
 var PoiVisMap = (function () {
 	function PoiVisMap(domId) {
 		_classCallCheck(this, PoiVisMap);
@@ -177,33 +181,12 @@ var PoiVisMap = (function () {
 	return PoiVisMap;
 })();
 
-function getJSON(url, param) {
-	var promise = new Promise(function (resolve, reject) {
-		var client = new XMLHttpRequest();
-		client.open("GET", url);
-		client.onreadystatechange = handler;
-		client.responseType = "json";
-		client.setRequestHeader("Accept", "application/json");
-		client.send(param);
-
-		function handler() {
-			if (this.readyState !== 4) {
-				return;
-			}
-			if (this.status === 200) {
-				resolve(this.response);
-			} else {
-				reject(new Error(this.statusText));
-			}
-		};
-	});
-	return promise;
-}
 /**
  * initialize the map
  * @param  {[String]} domId [id of map's container]
  * @return {[Object]}       [map]
  */
+
 function initMap(domId) {
 	L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
 	var map = L.mapbox.map(domId, 'mapbox.light').setView([30.608623, 114.274462], 11);
@@ -252,16 +235,16 @@ function createClusterLens(cluster, map, lendomId) {
 
 		var point = map.latLngToContainerPoint(e.latlng);
 		$(zl).show();
-		//获取当前的markers
+		//get the current markers
 		var clickMarkers = e.layer.getAllChildMarkers();
 
-		//移除lens中的marker
+		//remove the old-marker of lens
 		for (var m in oldLayer) {
 			var old_marker = oldLayer[m];
 			zoommap.removeLayer(old_marker);
 		}
 		oldLayer = [];
-		//把当前的marker加入lens、oldLayer以备删除
+		//add the current markers to lens and oldLayer
 		for (var i in clickMarkers) {
 			var marker = clickMarkers[i];
 			var latlng = marker._latlng;
@@ -271,21 +254,16 @@ function createClusterLens(cluster, map, lendomId) {
 			zoomMarker.addTo(zoommap);
 			oldLayer.push(zoomMarker);
 		}
-		//移动lens
+		//set the top/left of lens
 		zl.style.top = point.y - 100 + 'px';
 		zl.style.left = point.x - 100 + 'px';
-		//设置zoommap的显示区域
+		//set view of lens
 		zoommap.setView(e.latlng, map.getZoom() + 1, true);
 	});
 
 	cluster.on('clusterlayerremove', function (e) {
 		console.log(e);
 	});
-	// var originRemove = cluster.onRemove;
-	// cluster.onRemove=function(){
-	// 	originRemove();
-	// 	console.log('3');
-	// }
 }
 /**
  * create HeatMap
@@ -294,7 +272,7 @@ function createClusterLens(cluster, map, lendomId) {
  */
 function createHeatMap(data) {
 	var heat, gradient;
-	if (data.length < 500) {
+	if (data.length < 1000) {
 		gradient = {
 			0.05: '#c7f127',
 			0.1: '#daf127',
@@ -305,7 +283,18 @@ function createHeatMap(data) {
 			1: 'red'
 		};
 		heat = L.heatLayer(data, { radius: 35, gradient: gradient });
-	} else if (data.length >= 1000) {
+	} else if (data.length >= 1000 && data.length < 2000) {
+		gradient = {
+			0.3: '#c7f127',
+			0.4: '#daf127',
+			0.5: '#f3f73b',
+			0.6: '#FBEF0E',
+			0.7: '#FFD700',
+			0.8: '#f48e1a',
+			1: 'red'
+		};
+		heat = L.heatLayer(data, { radius: 15, gradient: gradient });
+	} else {
 		gradient = {
 			0.5: '#c7f127',
 			0.55: '#daf127',
@@ -315,8 +304,6 @@ function createHeatMap(data) {
 			0.98: '#f48e1a',
 			1: 'red'
 		};
-		heat = L.heatLayer(data, { radius: 15, gradient: gradient });
-	} else {
 		heat = L.heatLayer(data, { radius: 15 });
 	}
 
@@ -688,7 +675,11 @@ function getODData(timestamp) {
 		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php");
 	}
 }
-
+/**
+ * process of the OD-data
+ * @param  {[Array]} data [[{state,district},{}]]
+ * @return {[Object]}      [{lines,points,in,out}]
+ */
 function processODData(data) {
 	var taxi_data = data;
 
@@ -787,6 +778,13 @@ function processODData(data) {
 	};
 }
 
+/**
+ * get the taxi-flow-chart
+ * @param  {[Object]} flowChart  [Echarts Instance]
+ * @param  {[Array]} linesData  [[[{name,coord,value},{name,coord,value}],[]]]
+ * @param  {[Array]} pointsData [[{name:value}]]
+ * @return {[Object]}            [Echarts Instance]
+ */
 function taxiFlowChart(flowChart, linesData, pointsData) {
 
 	var option = {
@@ -1022,7 +1020,14 @@ function taxiFlowChart(flowChart, linesData, pointsData) {
 	flowChart.hideLoading();
 	return flowChart;
 }
-
+/**
+ * get the taxi-pass-chart
+ * @param  {[Object]} passChart [Echarts Instance]
+ * @param  {[Array]} inData    [[value1,value2,..]]
+ * @param  {[Array]} outData   [[value1,value2,..]]
+ * @param  {[Object]} flowChart [Echarts Instance]
+ * @return {[Object]}           [Echarts Instance]
+ */
 function taxiPassOutChart(passChart, inData, outData, flowChart) {
 	var option = {
 		title: {
@@ -1158,6 +1163,10 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+/**
+ * the class of weibo-text-map
+ */
+
 var WeiboTextMap = (function () {
     function WeiboTextMap(domId) {
         _classCallCheck(this, WeiboTextMap);
@@ -1223,6 +1232,7 @@ function initMap(domId) {
     var layer = L.mapbox.tileLayer('mapbox.streets');
     var layer_satelite = L.mapbox.tileLayer('mapbox.streets-satellite');
     var map = L.mapbox.map(domId).setView([30.590623, 114.274462], 11).addLayer(layer);
+
     //append the title of map
     var container = document.getElementById(domId);
     var width = container.clientWidth;
@@ -1231,11 +1241,15 @@ function initMap(domId) {
     title.style.left = width / 2 - 183 + "px";
     title.style.fontSize = "24px";
     title.style.color = "chocolate";
+    title.style.marginTop = "10px";
     title.textContent = "武汉近24小时微博聚合可视化结果";
     container.appendChild(title);
 
     return map;
 }
+/**
+ * the class of 3d-map of weibo-event
+ */
 
 var Event3DMap = (function () {
     function Event3DMap(domId) {
@@ -1279,11 +1293,9 @@ var Event3DMap = (function () {
 })();
 
 /**
- * 获取微博数据
- * @param  {[string]} city     [城市名]
- * @param  {[obj]} map      [地图对象]
- * @param  {[string]} idfArray [idf的数组]
- * @return {[null]}          [无]
+ * get the weibo-data
+ * @param  {[string]} city     [name of city]
+ * @return {[Promise]}          [promise object]
  */
 
 function getWeiboData(city) {
@@ -1291,10 +1303,10 @@ function getWeiboData(city) {
 }
 
 /**
- * 获取微博数据 回调函数
- * @param  {[Array]} data     [微博数据:[{text:..,geo:..},{}]]
- * @param  {[Object]} map      [leaflet地图对象]
- * @param  {[Array]} idfArray [idf数据]
+ * get the weibo-text-cluster-map
+ * @param  {[Array]} data     [weibo-data:[{text:..,geo:..},{}]]
+ * @param  {[Object]} map      [leaflet map object]
+ * @param  {[Array]} idfArray [idf-data]
  * @return {[null]}          [null]
  */
 function getWeiboTextCluster(data, map, idfData) {
@@ -1375,7 +1387,11 @@ function getWeiboTextCluster(data, map, idfData) {
         $("#tooltip").hide();
     });
 }
-
+/**
+ * show the tooltip of cluster
+ * @param  {[Object]} e [mouse event]
+ * @return {[null]}   [null]
+ */
 function showWeiboDetail(e) {
 
     var tooltip = $("#tooltip");
@@ -1384,14 +1400,14 @@ function showWeiboDetail(e) {
     var map_container = e.target._map._container;
     var point = e.target._map.latLngToContainerPoint(e.latlng);
 
-    //获取当前的markers
+    //get the current markers of cluster
     var currentMarkers = e.layer.getAllChildMarkers();
 
     tooltip.css("left", point.x + map_container.offsetLeft);
     tooltip_content.css("width", '200px');
     tooltip.css("width", '205px');
 
-    //如果point在下方，为避免出现tips超出主图区域，故让tips左下角定位在center
+    //set the top of tooltip
     if (map_container.clientHeight - point.y <= 250) {
         tooltip.css("top", point.y - 250);
     } else {
@@ -1403,7 +1419,7 @@ function showWeiboDetail(e) {
     var related_weibo_num = 0;
     tooltip.show();
     var centerReg = new RegExp(centerText, 'g');
-    //填充内容并高亮关键字
+    //set the content of tooltip
     for (var i = 0, length = currentMarkers.length; i < length; i++) {
         var marker = currentMarkers[i];
         var text = marker.options.title;
@@ -1415,7 +1431,7 @@ function showWeiboDetail(e) {
         }
     }
     var text_item = $('.weibo-text-item:last-child');
-    //如果内容高度超出范围，设定具体高度出现overflow，否则tips的高度就是内容的实际高度
+    //set the height of tooltip base the content's height
     if (text_item[0].offsetTop > 190) {
         tooltip.css("height", '245px');
         tooltip_content.css("height", '200px');
@@ -1431,7 +1447,12 @@ var wordsAndValue = [];
 var wordsOnly = [];
 var valueOnly = [];
 
-//实现分词并统计个数
+/**
+ * word segment
+ * @param  {[String]} allText  [words]
+ * @param  {[Array]} idfArray [idf-data ]
+ * @return {[Array]}          [[{key:value},...]]
+ */
 function wordseg(allText, idfArray) {
 
     //loaddic();
@@ -1469,7 +1490,7 @@ function wordseg(allText, idfArray) {
 
     var terms = Object.create(null);
     //console.log(text);
-    //把中文分开
+    //segment
     var regexp = /[^\u4E00-\u9FFF\u3400-\u4DBF]+/g;
     text = text.replace(regexp, '\n');
     //console.log(text);
@@ -1489,7 +1510,7 @@ function wordseg(allText, idfArray) {
         substrings = getAllSubStrings(chunk, 5);
         //console.log(substrings);
         substrings.forEach(function (substr) {
-            if (substr.length <= 1) //不取单个字的词
+            if (substr.length <= 1) //fileter the substring
                 return;
             if (!(substr in pendingTerms)) pendingTerms[substr] = 0;
             pendingTerms[substr]++;
@@ -1531,10 +1552,10 @@ function wordseg(allText, idfArray) {
 }
 
 /**
- * 获得字符串的子串
- * @param  {string} str 需要处理的字符串
- * @param  {int} maxLength 一次处理的最长长度
- * @return {array} result 子串组成的数组 
+ * get the substring
+ * @param  {[String]} str       [parent string]
+ * @param  {[Int]} maxLength [the max-length of processed the length of string]
+ * @return {[String]}           [substring]
  */
 function getAllSubStrings(str, maxLength) {
     if (!str.length) return [];
@@ -1556,4 +1577,4 @@ exports.Event3DMap = Event3DMap;
 
 
 
-//# sourceMappingURL=bundle.js.8fa6d430.map
+//# sourceMappingURL=bundle.js.c7f44294.map

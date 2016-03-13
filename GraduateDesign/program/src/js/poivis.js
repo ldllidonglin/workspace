@@ -1,3 +1,6 @@
+/**
+ * the class of poi-vis-map
+ */
 class PoiVisMap {
 	constructor(domId){
 		this.domId = domId;
@@ -54,28 +57,6 @@ class PoiVisMap {
     }
 }
 
-function getJSON(url,param){
-	var promise = new Promise(function(resolve, reject){
-	    var client = new XMLHttpRequest();
-	    client.open("GET", url);
-	    client.onreadystatechange = handler;
-	    client.responseType = "json";
-	    client.setRequestHeader("Accept", "application/json");
-	    client.send(param);
-
-	    function handler() {
-	      if ( this.readyState !== 4 ) {
-	        return;
-	      }
-	      if (this.status === 200) {
-	        resolve(this.response);
-	      } else {
-	        reject(new Error(this.statusText));
-	      }
-	    };
-	});
-  	return promise;
-}
 /**
  * initialize the map
  * @param  {[String]} domId [id of map's container]
@@ -130,16 +111,16 @@ function createClusterLens(cluster,map,lendomId){
 
 		var point = map.latLngToContainerPoint(e.latlng);
 		$(zl).show();
-		//获取当前的markers
+		//get the current markers
 		var clickMarkers = e.layer.getAllChildMarkers();
 
-		//移除lens中的marker
+		//remove the old-marker of lens
 		for(var m in oldLayer){
 			var old_marker = oldLayer[m];
 			zoommap.removeLayer(old_marker);
 		}
 		oldLayer=[];
-		//把当前的marker加入lens、oldLayer以备删除
+		//add the current markers to lens and oldLayer
 		for(var i in clickMarkers){
 			var marker = clickMarkers[i];
 			var latlng = marker._latlng;
@@ -149,21 +130,17 @@ function createClusterLens(cluster,map,lendomId){
 			zoomMarker.addTo(zoommap);
 		    oldLayer.push(zoomMarker);
 		}
-		//移动lens
+		//set the top/left of lens
 		zl.style.top = point.y - 100 + 'px';
 	    zl.style.left = point.x - 100 + 'px';
-	    //设置zoommap的显示区域
+	    //set view of lens
 	    zoommap.setView(e.latlng, map.getZoom() + 1, true);
 	});
 
 	cluster.on('clusterlayerremove',function(e){
 		console.log(e);
 	});
-	// var originRemove = cluster.onRemove;
-	// cluster.onRemove=function(){
-	// 	originRemove();
-	// 	console.log('3');
-	// }
+
 }
 /**
  * create HeatMap
@@ -172,7 +149,7 @@ function createClusterLens(cluster,map,lendomId){
  */
 function createHeatMap(data){
 	var heat, gradient;
-	if(data.length <500){
+	if(data.length <1000){
 		gradient = {
 			0.05:'#c7f127',
 			0.1:'#daf127',
@@ -184,7 +161,18 @@ function createHeatMap(data){
 		};
 		heat = L.heatLayer(data, {radius:35,gradient:gradient});
 	}
-	else if(data.length >= 1000){
+	else if(data.length >= 1000 && data.length < 2000){
+		gradient = {
+			0.3:'#c7f127',
+			0.4:'#daf127',
+			0.5:'#f3f73b',
+			0.6:'#FBEF0E',
+			0.7:'#FFD700',
+			0.8:'#f48e1a',
+			1:'red'
+		};
+		heat = L.heatLayer(data, {radius:15,gradient:gradient});
+	}else{
 		gradient = {
 			0.5:'#c7f127',
 			0.55:'#daf127',
@@ -194,8 +182,6 @@ function createHeatMap(data){
 			0.98:'#f48e1a',
 			1:'red'
 		};
-		heat = L.heatLayer(data, {radius:15,gradient:gradient});
-	}else{
 		heat = L.heatLayer(data, {radius:15});
 	}
 	

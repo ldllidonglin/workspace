@@ -1,3 +1,6 @@
+/**
+ * the class of weibo-text-map
+ */
 class WeiboTextMap {
     constructor(domId){
         this.domId = domId;
@@ -67,6 +70,7 @@ function initMap(domId){
     var layer = L.mapbox.tileLayer('mapbox.streets');
     var layer_satelite = L.mapbox.tileLayer('mapbox.streets-satellite');
     var map = L.mapbox.map(domId).setView([30.590623,114.274462], 11).addLayer(layer);
+    
     //append the title of map
     var container = document.getElementById(domId);
     var width = container.clientWidth;
@@ -75,12 +79,15 @@ function initMap(domId){
     title.style.left = (width/2 - 183) +"px";
     title.style.fontSize = "24px";
     title.style.color = "chocolate";
+    title.style.marginTop = "10px";
     title.textContent = "武汉近24小时微博聚合可视化结果"
     container.appendChild(title);
 
     return map;
 }
-
+/**
+ * the class of 3d-map of weibo-event
+ */
 class  Event3DMap{
     constructor(domId){
         this.domId = domId;
@@ -114,21 +121,19 @@ class  Event3DMap{
 }
 
 /**
- * 获取微博数据
- * @param  {[string]} city     [城市名]
- * @param  {[obj]} map      [地图对象]
- * @param  {[string]} idfArray [idf的数组]
- * @return {[null]}          [无]
+ * get the weibo-data
+ * @param  {[string]} city     [name of city]
+ * @return {[Promise]}          [promise object]
  */
 function getWeiboData (city) {
     return getData('http://202.114.123.53/zx/weibo/getWeiboData.php?city='+city);
 }
 
 /**
- * 获取微博数据 回调函数
- * @param  {[Array]} data     [微博数据:[{text:..,geo:..},{}]]
- * @param  {[Object]} map      [leaflet地图对象]
- * @param  {[Array]} idfArray [idf数据]
+ * get the weibo-text-cluster-map
+ * @param  {[Array]} data     [weibo-data:[{text:..,geo:..},{}]]
+ * @param  {[Object]} map      [leaflet map object]
+ * @param  {[Array]} idfArray [idf-data]
  * @return {[null]}          [null]
  */
 function getWeiboTextCluster(data,map,idfData){
@@ -210,7 +215,11 @@ function getWeiboTextCluster(data,map,idfData){
        $("#tooltip").hide();
     });
 }
-
+/**
+ * show the tooltip of cluster
+ * @param  {[Object]} e [mouse event]
+ * @return {[null]}   [null]
+ */
 function showWeiboDetail(e){
 
 	var tooltip = $("#tooltip");
@@ -219,14 +228,14 @@ function showWeiboDetail(e){
     var map_container = e.target._map._container;
     var point = e.target._map.latLngToContainerPoint(e.latlng);
 
-    //获取当前的markers
+    //get the current markers of cluster
     var currentMarkers = e.layer.getAllChildMarkers();
 
 	tooltip.css("left",point.x+map_container.offsetLeft);
 	tooltip_content.css("width",'200px');
 	tooltip.css("width",'205px');
 	
-    //如果point在下方，为避免出现tips超出主图区域，故让tips左下角定位在center
+    //set the top of tooltip
     if(map_container.clientHeight-point.y<=250){
         tooltip.css("top",point.y-250);
     }else{
@@ -238,7 +247,7 @@ function showWeiboDetail(e){
 	var related_weibo_num=0;
 	tooltip.show();
     var centerReg = new RegExp(centerText,'g');
-    //填充内容并高亮关键字
+    //set the content of tooltip
    	for(var i=0,length = currentMarkers.length;i<length;i++){
    		var marker = currentMarkers[i];
    		var text = marker.options.title;
@@ -250,7 +259,7 @@ function showWeiboDetail(e){
    		}
    	}
     var text_item = $('.weibo-text-item:last-child');
-    //如果内容高度超出范围，设定具体高度出现overflow，否则tips的高度就是内容的实际高度
+    //set the height of tooltip base the content's height
     if(text_item[0].offsetTop>190){
         tooltip.css("height",'245px');
         tooltip_content.css("height",'200px');
@@ -268,7 +277,12 @@ var wordsOnly = [];
 var valueOnly = [];
 
 
-//实现分词并统计个数
+/**
+ * word segment
+ * @param  {[String]} allText  [words]
+ * @param  {[Array]} idfArray [idf-data ]
+ * @return {[Array]}          [[{key:value},...]]
+ */
 function wordseg(allText,idfArray){
 	
     //loaddic();
@@ -307,7 +321,7 @@ function wordseg(allText,idfArray){
 
     var terms = Object.create(null);
     //console.log(text);
-    //把中文分开
+    //segment
     var regexp = /[^\u4E00-\u9FFF\u3400-\u4DBF]+/g;
     text = text.replace(regexp, '\n');
     //console.log(text);
@@ -330,7 +344,7 @@ function wordseg(allText,idfArray){
         substrings = getAllSubStrings(chunk, 5);
         //console.log(substrings);
         substrings.forEach(function (substr) {
-            if (substr.length <= 1)   //不取单个字的词
+            if (substr.length <= 1)   //fileter the substring
                 return;
             if (!(substr in pendingTerms))
                 pendingTerms[substr] = 0;     
@@ -382,10 +396,10 @@ function wordseg(allText,idfArray){
 }
 
 /**
- * 获得字符串的子串
- * @param  {string} str 需要处理的字符串
- * @param  {int} maxLength 一次处理的最长长度
- * @return {array} result 子串组成的数组 
+ * get the substring
+ * @param  {[String]} str       [parent string]
+ * @param  {[Int]} maxLength [the max-length of processed the length of string]
+ * @return {[String]}           [substring]
  */
 function getAllSubStrings(str, maxLength) {
     if (!str.length)

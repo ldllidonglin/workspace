@@ -259,7 +259,11 @@ function getODData(timestamp){
 	}
 	
 }
-
+/**
+ * process of the OD-data
+ * @param  {[Array]} data [[{state,district},{}]]
+ * @return {[Object]}      [{lines,points,in,out}]
+ */
 function processODData(data){
 	var taxi_data = data;
 
@@ -359,7 +363,13 @@ function processODData(data){
 	}
 }
 
-
+/**
+ * get the taxi-flow-chart
+ * @param  {[Object]} flowChart  [Echarts Instance]
+ * @param  {[Array]} linesData  [[[{name,coord,value},{name,coord,value}],[]]]
+ * @param  {[Array]} pointsData [[{name:value}]]
+ * @return {[Object]}            [Echarts Instance]
+ */
 function taxiFlowChart(flowChart,linesData,pointsData){
 
 	var option = {
@@ -618,7 +628,14 @@ function taxiFlowChart(flowChart,linesData,pointsData){
 	flowChart.hideLoading();
 	return flowChart;
 }
-
+/**
+ * get the taxi-pass-chart
+ * @param  {[Object]} passChart [Echarts Instance]
+ * @param  {[Array]} inData    [[value1,value2,..]]
+ * @param  {[Array]} outData   [[value1,value2,..]]
+ * @param  {[Object]} flowChart [Echarts Instance]
+ * @return {[Object]}           [Echarts Instance]
+ */
 function taxiPassOutChart(passChart,inData,outData,flowChart){
 	var option = {
 		title : {
