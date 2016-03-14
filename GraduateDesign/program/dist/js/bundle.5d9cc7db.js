@@ -1200,13 +1200,14 @@ function getData(url) {
         client.send();
 
         function handler() {
+            if (this.status === 500) {
+                alert("数据加载出错，请刷新浏览器");
+            }
             if (this.readyState !== 4) {
                 return;
             }
             if (this.status === 200) {
                 resolve(this.response);
-            } else if (this.status === 500) {
-                alert("数据加载出错，请刷新浏览器");
             } else {
                 reject(new Error(this.statusText));
             }
@@ -1577,4 +1578,4 @@ exports.Event3DMap = Event3DMap;
 
 
 
-//# sourceMappingURL=bundle.js.c7f44294.map
+//# sourceMappingURL=bundle.js.f3a27a46.map
