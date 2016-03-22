@@ -308,12 +308,12 @@ function createHeatMap(data) {
 		heat = L.heatLayer(data, { radius: 15, gradient: gradient });
 	} else {
 		gradient = {
-			0.5: '#c7f127',
-			0.55: '#daf127',
-			0.6: '#f3f73b',
-			0.7: '#FBEF0E',
-			0.8: '#FFD700',
-			0.98: '#f48e1a',
+			0.55: '#c7f127',
+			0.65: '#daf127',
+			0.7: '#f3f73b',
+			0.8: '#FBEF0E',
+			0.9: '#FFD700',
+			0.99: '#f48e1a',
 			1: 'red'
 		};
 		heat = L.heatLayer(data, { radius: 15, gradient: gradient });
@@ -1590,4 +1590,4 @@ exports.Event3DMap = Event3DMap;
 
 
 
-//# sourceMappingURL=bundle.js.19abf018.map
+//# sourceMappingURL=bundle.js.76477615.map
