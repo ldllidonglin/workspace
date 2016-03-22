@@ -271,6 +271,7 @@ function createClusterLens(cluster, map, lendomId) {
  * @return {[Object]}      [heatLayer]
  */
 function createHeatMap(data) {
+	console.log(data.length);
 	var heat, gradient;
 	if (data.length < 1000) {
 		gradient = {
@@ -294,6 +295,17 @@ function createHeatMap(data) {
 			1: 'red'
 		};
 		heat = L.heatLayer(data, { radius: 15, gradient: gradient });
+	} else if (data.length >= 2000 && data.length < 3000) {
+		gradient = {
+			0.5: '#c7f127',
+			0.55: '#daf127',
+			0.6: '#f3f73b',
+			0.7: '#FBEF0E',
+			0.8: '#FFD700',
+			0.98: '#f48e1a',
+			1: 'red'
+		};
+		heat = L.heatLayer(data, { radius: 15, gradient: gradient });
 	} else {
 		gradient = {
 			0.5: '#c7f127',
@@ -304,7 +316,7 @@ function createHeatMap(data) {
 			0.98: '#f48e1a',
 			1: 'red'
 		};
-		heat = L.heatLayer(data, { radius: 15 });
+		heat = L.heatLayer(data, { radius: 15, gradient: gradient });
 	}
 
 	return heat;
