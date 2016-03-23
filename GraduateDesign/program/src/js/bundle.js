@@ -341,7 +341,7 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 var getCharts = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(domId) {
-		var container, rowdiv, cal_heat_dom, passChartDom, flowChartDom, flowChart, passChart, wuhan_od, result_data;
+		var container, rowdiv, rowdiv2, cal_heat_dom, passChartDom, flowChartDom, flowChartDom2, flowChart, passChart, flowChart2, wuhan_od, result_data;
 		return regeneratorRuntime.wrap(function _callee$(_context) {
 			while (1) {
 				switch (_context.prev = _context.next) {
@@ -350,6 +350,10 @@ var getCharts = (function () {
 						rowdiv = document.createElement("div");
 
 						rowdiv.className = 'row';
+
+						rowdiv2 = document.createElement("div");
+
+						rowdiv2.className = 'row';
 
 						//cal-heatmap month
 						cal_heat_dom = document.createElement('div');
@@ -379,7 +383,15 @@ var getCharts = (function () {
 						flowChartDom.className = 'col s4';
 						rowdiv.appendChild(flowChartDom);
 
+						flowChartDom2 = document.createElement('div');
+
+						flowChartDom2.style.height = '600px';
+						flowChartDom2.id = 'taxi-flow-chart2';
+						flowChartDom2.className = 'col s4';
+						rowdiv2.appendChild(flowChartDom2);
+
 						container.appendChild(rowdiv);
+						container.appendChild(rowdiv2);
 
 						flowChart = echarts.getInstanceByDom(flowChartDom);
 
@@ -395,23 +407,37 @@ var getCharts = (function () {
 						}
 						passChart.showLoading();
 
+						flowChart2 = echarts.getInstanceByDom(flowChartDom2);
+
+						if (!flowChart2) {
+							flowChart2 = echarts.init(flowChartDom2);
+						}
+						flowChart2.showLoading();
+
 						//get od-data of wuhan
-						_context.next = 27;
+						_context.next = 38;
 						return getODData();
 
-					case 27:
+					case 38:
 						wuhan_od = _context.sent;
+
+						//get day-linechart
+						getDayLineMap(wuhan_od);
+
 						result_data = processODData(wuhan_od);
 
 						//get Flowchart
 
-						taxiFlowChart(flowChart, result_data['limes'], result_data['points']);
+						taxiFlowChart(flowChart, result_data['lines'], result_data['points']);
+
+						//get Flowchart2
+						taxiFlowChart2(flowChart2, result_data['lines2'], result_data['points2']);
 
 						//get PassOutChart
 						taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
 						return _context.abrupt("return", { 'flowChart': flowChart, 'passChart': passChart });
 
-					case 32:
+					case 45:
 					case "end":
 						return _context.stop();
 				}
@@ -498,34 +524,38 @@ var getCalHeat = (function () {
 	};
 })();
 /**
- * get the day-calheat by time
+ * get the day-lineChart by time
  * @param  {[int]} timestamp [timestamp]
  * @return {[null]}           [null]
  */
 
 var getChartByTime = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(timestamp) {
-		var flowChart, passChart, wuhan_od, result_data;
+		var flowChart, flowChart2, passChart, wuhan_od, result_data;
 		return regeneratorRuntime.wrap(function _callee3$(_context3) {
 			while (1) {
 				switch (_context3.prev = _context3.next) {
 					case 0:
 						flowChart = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart"));
+						flowChart2 = echarts.getInstanceByDom(document.getElementById("taxi-flow-chart2"));
 						passChart = echarts.getInstanceByDom(document.getElementById("taxi-pass-chart"));
 
 						flowChart.showLoading();
 						passChart.showLoading();
-						_context3.next = 6;
+						_context3.next = 7;
 						return getODData(timestamp);
 
-					case 6:
+					case 7:
 						wuhan_od = _context3.sent;
 						result_data = processODData(wuhan_od);
 
 						getDayLineMap(wuhan_od);
 
 						//get Flowchart
-						taxiFlowChart(flowChart, result_data['limes'], result_data['points']);
+						taxiFlowChart(flowChart, result_data['lines'], result_data['points']);
+
+						//get Flowchart2
+						taxiFlowChart2(flowChart2, result_data['lines2'], result_data['points2']);
 
 						//get PassOutChart
 						console.log(passChart);
@@ -533,7 +563,7 @@ var getChartByTime = (function () {
 						flowChart.hideLoading();
 						passChart.hideLoading();
 
-					case 14:
+					case 16:
 					case "end":
 						return _context3.stop();
 				}
@@ -744,6 +774,9 @@ function processODData(data) {
 
 	var draw_data = {};
 
+	//武汉三镇
+	var draw_data2 = {};
+
 	//calculate in/out between two district
 	for (var i = 0, length = taxi_data.length; i < length; i++) {
 		var start_point = taxi_data[i];
@@ -759,6 +792,27 @@ function processODData(data) {
 		if (start_point.district === '' || end_point.district === '') {
 			continue;
 		}
+		var dislink = {
+			'江岸区': '汉口',
+			'江汉区': '汉口',
+			'硚口区': '汉口',
+			'汉阳区': '汉阳',
+			'武昌区': '武昌',
+			'青山区': '武昌',
+			'洪山区': '武昌'
+		};
+
+		if (draw_data2[dislink[start_point.district]]) {
+			if (draw_data2[dislink[start_point.district]][dislink[end_point.district]]) {
+				draw_data2[dislink[start_point.district]][dislink[end_point.district]] += 1;
+			} else {
+				draw_data2[dislink[start_point.district]][dislink[end_point.district]] = 1;
+			}
+		} else {
+			draw_data2[dislink[start_point.district]] = {};
+			draw_data2[dislink[start_point.district]][dislink[end_point.district]] = 1;
+		}
+
 		if (draw_data[start_point.district]) {
 			if (draw_data[start_point.district][end_point.district]) {
 				draw_data[start_point.district][end_point.district] += 1;
@@ -772,6 +826,7 @@ function processODData(data) {
 
 		i++;
 	}
+	console.log(draw_data2);
 	data = draw_data;
 	var districtLonLat = {
 		"江汉区": [114.274462, 30.608623],
@@ -787,6 +842,12 @@ function processODData(data) {
 		"江夏区": [114.329941, 30.381085],
 		"新洲区": [114.807983, 30.848025],
 		"汉南区": [114.193972, 30.479202]
+	};
+
+	var distirct2 = {
+		"汉口": [114.277336, 30.624536],
+		"武昌": [114.396919, 30.518071],
+		"汉阳": [114.210646, 30.533003]
 	};
 	function getDistrictIn(district) {
 		var value = 0;
@@ -804,6 +865,8 @@ function processODData(data) {
 
 	var temp_markline_data = {};
 	var temp_point_data = {};
+	var temp_markline_data2 = {};
+	var temp_point_data2 = {};
 	var taxi_region_in = []; //各区域车辆流入数量
 	var taxi_region_out = []; //各区域车辆流出数量
 	for (var name in data) {
@@ -829,9 +892,43 @@ function processODData(data) {
 
 		taxi_region_out.push(out_num);
 	}
+
+	//flowdata2
+	for (var name in draw_data2) {
+		if (name == "undefined") {
+			continue;
+		}
+		var temp_lime = [];
+		var temp_point = [];
+		var item = draw_data2[name];
+
+		var out_num = 0;
+
+		for (var name2 in item) {
+			if (name2 == "undefined") {
+				continue;
+			}
+			if (name2 != name) {
+				out_num += item[name2];
+				temp_lime.push([{ name: name, coord: distirct2[name], value: item[name2] }, { name: name2, coord: distirct2[name2], value: item[name2] }]);
+				temp_point.push({ name: name2, value: distirct2[name2].concat([item[name2]]) });
+			}
+		}
+
+		temp_markline_data2[name] = temp_lime;
+		temp_point_data2[name] = temp_point;
+
+		var in_num = getDistrictIn(name);
+		taxi_region_in.push(in_num);
+
+		taxi_region_out.push(out_num);
+	}
+
 	return {
-		"limes": temp_markline_data,
+		"lines": temp_markline_data,
 		'points': temp_point_data,
+		"lines2": temp_markline_data2,
+		'points2': temp_point_data2,
 		'in': taxi_region_in,
 		'out': taxi_region_out
 	};
@@ -859,7 +956,8 @@ function taxiFlowChart(flowChart, linesData, pointsData) {
 		tooltip: {
 			trigger: 'item',
 			formatter: function formatter(v) {
-				return v.data[0].name + " > " + v.data[1].name;
+				console.log(v);
+				return v.data[0].name + " > " + v.data[1].name + " : " + v.value;
 			}
 		},
 		legend: {
@@ -1077,8 +1175,258 @@ function taxiFlowChart(flowChart, linesData, pointsData) {
 	flowChart.setOption(option);
 	console.log(option);
 	flowChart.hideLoading();
+	// flowChart.on("bmapRoam",function(e){
+	// 	console.log(e);
+	// });
 	return flowChart;
 }
+
+/**
+ * get the taxi-flow-chart2
+ * @param  {[Object]} flowChart  [Echarts Instance]
+ * @param  {[Array]} linesData  [[[{name,coord,value},{name,coord,value}],[]]]
+ * @param  {[Array]} pointsData [[{name:value}]]
+ * @return {[Object]}            [Echarts Instance]
+ */
+function taxiFlowChart2(flowChart, linesData, pointsData) {
+
+	var option = {
+		backgroundColor: '#404a59',
+		title: {
+			text: '武汉三镇之间出租车流动图',
+			subtext: '',
+			left: 'center',
+			textStyle: {
+				color: '#fff'
+			}
+		},
+		tooltip: {
+			trigger: 'item',
+			formatter: function formatter(v) {
+				return v.data[0].name + " > " + v.data[1].name + " : " + v.value;;
+			}
+		},
+		legend: {
+			orient: 'vertical',
+			top: 'bottom',
+			left: 'right',
+			data: [],
+			textStyle: {
+				color: '#fff'
+			},
+			selectedMode: 'single'
+		},
+		bmap: {
+			center: [114.274462, 30.608623],
+			zoom: 11,
+			roam: true,
+			mapStyle: {
+				styleJson: [{
+					"featureType": "water",
+					"elementType": "all",
+					"stylers": {
+						"color": "#134f5c"
+					}
+				}, {
+					"featureType": "land",
+					"elementType": "all",
+					"stylers": {
+						"color": "#444444"
+					}
+				}, {
+					"featureType": "boundary",
+					"elementType": "geometry",
+					"stylers": {
+						"color": "#064f85"
+					}
+				}, {
+					"featureType": "railway",
+					"elementType": "all",
+					"stylers": {
+						"visibility": "off"
+					}
+				}, {
+					"featureType": "highway",
+					"elementType": "geometry",
+					"stylers": {
+						"color": "#3d85c6",
+						"lightness": -53
+					}
+				}, {
+					"featureType": "highway",
+					"elementType": "geometry.fill",
+					"stylers": {
+						"color": "#76a5af"
+					}
+				}, {
+					"featureType": "highway",
+					"elementType": "labels",
+					"stylers": {
+						"visibility": "off"
+					}
+				}, {
+					"featureType": "arterial",
+					"elementType": "geometry",
+					"stylers": {
+						"color": "#33707d"
+					}
+				}, {
+					"featureType": "arterial",
+					"elementType": "geometry.fill",
+					"stylers": {
+						"color": "#45818e",
+						"lightness": -56
+					}
+				}, {
+					"featureType": "poi",
+					"elementType": "all",
+					"stylers": {
+						"visibility": "off"
+					}
+				}, {
+					"featureType": "green",
+					"elementType": "all",
+					"stylers": {
+						"color": "#056197",
+						"visibility": "off"
+					}
+				}, {
+					"featureType": "subway",
+					"elementType": "all",
+					"stylers": {
+						"visibility": "off"
+					}
+				}, {
+					"featureType": "manmade",
+					"elementType": "all",
+					"stylers": {
+						"visibility": "off"
+					}
+				}, {
+					"featureType": "local",
+					"elementType": "all",
+					"stylers": {
+						"visibility": "off"
+					}
+				}, {
+					"featureType": "arterial",
+					"elementType": "labels",
+					"stylers": {
+						"visibility": "off"
+					}
+				}, {
+					"featureType": "boundary",
+					"elementType": "geometry.fill",
+					"stylers": {
+						"color": "#029fd4"
+					}
+				}, {
+					"featureType": "building",
+					"elementType": "all",
+					"stylers": {
+						"color": "#1a5787"
+					}
+				}, {
+					"featureType": "label",
+					"elementType": "all",
+					"stylers": {
+						"visibility": "off"
+					}
+				}]
+			}
+		},
+		visualMap: [{
+			type: 'continuous',
+			min: 50,
+			max: 1800,
+			text: ['High', 'Low'],
+			realtime: true,
+			calculable: true,
+			color: ['orangered', 'yellow', 'lightskyblue']
+		}],
+		series: []
+	};
+	var series = [];
+	for (var name in linesData) {
+		option.legend.data.push(name);
+		var temp_markline_data = linesData[name];
+		var temp_point_data = pointsData[name];
+		series.push({
+			name: name,
+			type: 'lines',
+			coordinateSystem: 'bmap',
+			effect: {
+				show: true,
+				period: 6,
+				trailLength: 0,
+				symbol: 'arrow',
+				symbolSize: 15
+			},
+			lineStyle: {
+				normal: {
+					width: 20,
+					opacity: 0.4,
+					curveness: 0.2
+				}
+			},
+			data: temp_markline_data
+		}, {
+			name: name,
+			type: 'lines',
+			coordinateSystem: 'bmap',
+			zlevel: 1,
+			effect: {
+				show: true,
+				period: 6,
+				trailLength: 0.7,
+				color: '#fff',
+				symbolSize: 3
+			},
+			lineStyle: {
+				normal: {
+					width: 5,
+					curveness: 0.2
+				}
+			},
+			data: temp_markline_data
+		}, {
+			name: name,
+			type: 'effectScatter',
+			coordinateSystem: 'bmap',
+			zlevel: 2,
+			rippleEffect: {
+				brushType: 'stroke'
+			},
+			label: {
+				normal: {
+					show: true,
+					position: 'right',
+					formatter: '{b}'
+				}
+			},
+			symbolSize: function symbolSize(val) {
+				var size = Math.log(val[2]) * 3;
+				return size;
+			},
+			itemStyle: {
+				normal: {
+					color: '#a6c84c'
+				}
+			},
+			data: temp_point_data
+		});
+	}
+
+	option.series = series;
+	flowChart.setOption(option);
+	console.log(option);
+	flowChart.hideLoading();
+	// flowChart.on("bmapRoam",function(e){
+	// 	console.log(e);
+	// });
+	return flowChart;
+}
+
 /**
  * get the taxi-pass-chart
  * @param  {[Object]} passChart [Echarts Instance]
