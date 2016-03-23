@@ -401,9 +401,6 @@ var getCharts = (function () {
 
 					case 27:
 						wuhan_od = _context.sent;
-
-						console.log(wuhan_od);
-
 						result_data = processODData(wuhan_od);
 
 						//get Flowchart
@@ -414,7 +411,7 @@ var getCharts = (function () {
 						taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
 						return _context.abrupt("return", { 'flowChart': flowChart, 'passChart': passChart });
 
-					case 33:
+					case 32:
 					case "end":
 						return _context.stop();
 				}
@@ -434,7 +431,7 @@ var getCharts = (function () {
 
 var getCalHeat = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(dom) {
-		var month_data, month_result, m, item, d, calMonth;
+		var month_data, month_result, m, item, d, calMonth, titleDom;
 		return regeneratorRuntime.wrap(function _callee2$(_context2) {
 			while (1) {
 				switch (_context2.prev = _context2.next) {
@@ -444,8 +441,6 @@ var getCalHeat = (function () {
 
 					case 2:
 						month_data = _context2.sent;
-
-						console.log(month_data);
 						month_result = {};
 
 						for (m in month_data) {
@@ -484,8 +479,13 @@ var getCalHeat = (function () {
 								getChartByTime(date.getTime() / 1000);
 							}
 						});
+						titleDom = document.createElement('div');
 
-					case 8:
+						titleDom.style.textAlign = 'center';
+						titleDom.innerHTML = "2014年1月各天车流量";
+						dom.insertBefore(titleDom, dom.getElementsByTagName("svg")[0]);
+
+					case 11:
 					case "end":
 						return _context2.stop();
 				}
@@ -498,7 +498,7 @@ var getCalHeat = (function () {
 	};
 })();
 /**
- * get the day-calheat by time 
+ * get the day-calheat by time
  * @param  {[int]} timestamp [timestamp]
  * @return {[null]}           [null]
  */
@@ -522,8 +522,7 @@ var getChartByTime = (function () {
 						wuhan_od = _context3.sent;
 						result_data = processODData(wuhan_od);
 
-						console.log(result_data);
-						getDayHeatMap(wuhan_od);
+						getDayLineMap(wuhan_od);
 
 						//get Flowchart
 						taxiFlowChart(flowChart, result_data['limes'], result_data['points']);
@@ -534,7 +533,7 @@ var getChartByTime = (function () {
 						flowChart.hideLoading();
 						passChart.hideLoading();
 
-					case 15:
+					case 14:
 					case "end":
 						return _context3.stop();
 				}
@@ -547,7 +546,7 @@ var getChartByTime = (function () {
 	};
 })();
 /**
- * [getDayHeatMap by data]
+ * [getDayLineMap by data]
  * @param  {[Array]} odData [[obj,obj]]]
  * @return {[null]}        [null]
  */
@@ -586,50 +585,98 @@ var TaxiVisChart = (function () {
 	return TaxiVisChart;
 })();
 
-function getDayHeatMap(odData) {
+function getDayLineMap(odData) {
 	var origintime = odData[0].time_point;
 	var origindate = new Date(origintime * 1000);
 	var starttime = new Date(origindate.getFullYear(), origindate.getMonth(), origindate.getDate(), 0).getTime() / 1000;
-	var day_heat_data = {};
+	var lineData = [];
 	for (var d = 0; d < odData.length; d++) {
 		var item = odData[d];
 		var index = parseInt((item.time_point - origintime) / 3600);
-		if (day_heat_data[starttime + index * 3600] >= 0) {
-			day_heat_data[starttime + index * 3600] += 1;
+		if (lineData[index] >= 0) {
+			lineData[index] += 1;
 		} else {
-			day_heat_data[starttime + index * 3600] = 0;
+			lineData[index] = 0;
 		}
 	}
-	console.log(day_heat_data);
+	var option = {
+		tooltip: {
+			trigger: 'axis'
+		},
+		title: {
+			left: 'left',
+			text: '各小时车流量'
+		},
+		legend: {
+			top: 'bottom',
+			data: ['意向']
+		},
+		toolbox: {
+			show: true,
+			feature: {
+				dataView: { show: true, readOnly: false },
+				magicType: { show: true, type: ['line', 'bar', 'stack', 'tiled'] },
+				restore: { show: true },
+				saveAsImage: { show: true }
+			}
+		},
+		xAxis: {
+			type: 'category',
+			boundaryGap: false,
+			data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+		},
+		yAxis: {
+			type: 'value',
+			boundaryGap: [0, '100%']
+		},
+		series: [{
+			name: '出租车流量',
+			type: 'line',
+			smooth: true,
+			symbol: 'none',
+			sampling: 'average',
+			itemStyle: {
+				normal: {
+					color: 'rgb(255, 70, 131)'
+				}
+			},
+			areaStyle: {
+				normal: {
+					color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+						offset: 0,
+						color: 'rgb(255, 158, 68)'
+					}, {
+						offset: 1,
+						color: 'rgb(255, 70, 131)'
+					}])
+				}
+			},
+			data: lineData,
+			markPoint: {
+				data: [{ type: 'max', name: '最大值' }, { type: 'min', name: '最小值' }]
+			},
+			markLine: {
+				data: [{ type: 'average', name: '平均值' }]
+			}
+		}]
+	};
+
 	var cal_haat_container = document.getElementById("cal-heatmap");
 	var dayElement = document.getElementById('day-calheat');
-	if (dayElement) {
-		dayElement.innerHTML = '';
-	} else {
+	if (!dayElement) {
 		var dayElement = document.createElement("div");
 		dayElement.id = 'day-calheat';
+		dayElement.style.height = '300px';
+		cal_haat_container.appendChild(dayElement);
 	}
-	cal_haat_container.appendChild(dayElement);
-	var calMonth = new CalHeatMap();
-	calMonth.init({
-		itemSelector: dayElement,
-		domain: 'day',
-		start: new Date(starttime * 1000),
-		range: 1,
-		data: day_heat_data,
-		subDomain: 'x_hour',
-		highlight: "now",
-		cellSize: 40,
-		subDomainTextFormat: "%d",
-		legend: [500, 1000, 1200, 1300, 1400, 1500],
-		legendColors: {
-			min: "green",
-			max: "red",
-			empty: "#ffffff",
-			base: "grey",
-			overflow: "grey"
-		}
-	});
+	var dayBarChart = echarts.getInstanceByDom(dayElement);
+	if (!dayBarChart) {
+		dayBarChart = echarts.init(dayElement);
+	}
+
+	dayBarChart.showLoading();
+	dayBarChart.setOption(option);
+	dayBarChart.hideLoading();
 }
 
 /**
@@ -669,7 +716,7 @@ function getGeojson(city) {
 	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city=" + city);
 }
 /**
- * get the month data 
+ * get the month data
  * @return {[Promise]} [Promise obj]
  */
 function getMonthData() {

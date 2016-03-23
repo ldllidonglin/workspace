@@ -70,13 +70,12 @@ async function getCharts(domId){
 	//get od-data of wuhan
 	var wuhan_od = await getODData();
 
-	console.log(wuhan_od);
 
 	var result_data = processODData(wuhan_od);
 
 	//get Flowchart
 	taxiFlowChart(flowChart,result_data['limes'],result_data['points']);
-	
+
 	//get PassOutChart
 	taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
 	return { 'flowChart':flowChart,'passChart':passChart }
@@ -88,7 +87,6 @@ async function getCharts(domId){
  */
 async function getCalHeat(dom){
 	var month_data = await getMonthData();
-	console.log(month_data);
 	var month_result ={};
 	for(var m in month_data){
 		month_result[m] = 0;
@@ -107,7 +105,7 @@ async function getCalHeat(dom){
 		data:month_result,
 		subDomain: 'x_day',
 		highlight: "now",
-        cellSize: 40, 
+        cellSize: 40,
         subDomainTextFormat: "%d",
         legend: [20000,23000,26000,29000,32000,35000],
         legendColors: {
@@ -125,9 +123,13 @@ async function getCalHeat(dom){
 
         }
 	});
+	var titleDom = document.createElement('div');
+	titleDom.style.textAlign = 'center';
+	titleDom.innerHTML= "2014年1月各天车流量"
+	dom.insertBefore(titleDom,dom.getElementsByTagName("svg")[0]);
 }
 /**
- * get the day-calheat by time 
+ * get the day-calheat by time
  * @param  {[int]} timestamp [timestamp]
  * @return {[null]}           [null]
  */
@@ -138,12 +140,12 @@ async function getChartByTime(timestamp){
 	passChart.showLoading();
 	var wuhan_od = await getODData(timestamp);
 	var result_data = processODData(wuhan_od);
-	console.log(result_data);
-	getDayHeatMap(wuhan_od);
-	
+
+	getDayLineMap(wuhan_od);
+
 	//get Flowchart
 	taxiFlowChart(flowChart,result_data['limes'],result_data['points']);
-	
+
 	//get PassOutChart
 	console.log(passChart);
 	taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
@@ -151,55 +153,109 @@ async function getChartByTime(timestamp){
 	passChart.hideLoading();
 }
 /**
- * [getDayHeatMap by data]
+ * [getDayLineMap by data]
  * @param  {[Array]} odData [[obj,obj]]]
  * @return {[null]}        [null]
  */
-function getDayHeatMap(odData){
+function getDayLineMap(odData){
 	var origintime = odData[0].time_point;
 	var origindate = new Date(origintime*1000);
 	var starttime = new Date(origindate.getFullYear(),origindate.getMonth(),origindate.getDate(),0).getTime()/1000;
-	var day_heat_data = {};
+	var lineData = [];
 	for(var d=0;d<odData.length;d++){
 		var item = odData[d];
 		var index = parseInt((item.time_point - origintime)/3600);
-		if(day_heat_data[starttime+index*3600] >= 0 ){
-			day_heat_data[starttime+index*3600] +=1; 
+		if(lineData[index] >= 0 ){
+			lineData[index] +=1;
 		}else{
-			day_heat_data[starttime+index*3600] = 0;
+			lineData[index] = 0;
 		}
 	}
-	console.log(day_heat_data);
+	var option = {
+	    tooltip: {
+	        trigger: 'axis'
+	    },
+	    title: {
+	        left: 'left',
+	        text: '各小时车流量',
+	    },
+	    legend: {
+	        top: 'bottom',
+	        data:['意向']
+	    },
+	    toolbox: {
+	        show: true,
+	        feature: {
+	            dataView: {show: true, readOnly: false},
+	            magicType: {show: true, type: ['line', 'bar', 'stack', 'tiled']},
+	            restore: {show: true},
+	            saveAsImage: {show: true}
+	        }
+	    },
+	    xAxis: {
+	        type: 'category',
+	        boundaryGap: false,
+	        data: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
+	    },
+	    yAxis: {
+	        type: 'value',
+	        boundaryGap: [0, '100%']
+	    },
+	    series: [
+	        {
+	            name:'出租车流量',
+	            type:'line',
+	            smooth:true,
+	            symbol: 'none',
+	            sampling: 'average',
+	            itemStyle: {
+	                normal: {
+	                    color: 'rgb(255, 70, 131)'
+	                }
+	            },
+	            areaStyle: {
+	                normal: {
+	                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+	                        offset: 0,
+	                        color: 'rgb(255, 158, 68)'
+	                    }, {
+	                        offset: 1,
+	                        color: 'rgb(255, 70, 131)'
+	                    }])
+	                }
+	            },
+	            data: lineData,
+	            markPoint : {
+	                data : [
+	                    {type : 'max', name: '最大值'},
+	                    {type : 'min', name: '最小值'}
+	                ]
+	            },
+	            markLine : {
+	                data : [
+	                    {type : 'average', name: '平均值'}
+	                ]
+	            }
+	        }
+	    ]
+	};
+
 	var cal_haat_container = document.getElementById("cal-heatmap");
 	var dayElement = document.getElementById('day-calheat');
-	if(dayElement){
-		dayElement.innerHTML = '';
-	}else{
+	if(!dayElement){
 		var dayElement = document.createElement("div");
 		dayElement.id = 'day-calheat';
+		dayElement.style.height = '300px';
+		cal_haat_container.appendChild(dayElement);
 	}
-	cal_haat_container.appendChild(dayElement);
-	var calMonth = new CalHeatMap();
-	calMonth.init({
-		itemSelector: dayElement,
-		domain: 'day',
-		start: new Date(starttime*1000),
-		range: 1,
-		data:day_heat_data,
-		subDomain: 'x_hour',
-		highlight: "now",
-        cellSize: 40, 
-        subDomainTextFormat: "%d",
-        legend: [500,1000,1200,1300,1400,1500],
-        legendColors: {
-           min: "green",
-           max: "red",
-           empty: "#ffffff",
-           base: "grey",
-           overflow: "grey"
-        }
-	});
+	var dayBarChart = echarts.getInstanceByDom(dayElement);
+	if(!dayBarChart){
+		dayBarChart = echarts.init(dayElement);
+	}
 
+	dayBarChart.showLoading();
+	dayBarChart.setOption(option);
+	dayBarChart.hideLoading();
 }
 
 /**
@@ -240,7 +296,7 @@ function getGeojson(city){
 	return getJSON("http://202.114.123.53/zx/taxi/getGeojson.php?city="+city);
 }
 /**
- * get the month data 
+ * get the month data
  * @return {[Promise]} [Promise obj]
  */
 function getMonthData(){
@@ -257,7 +313,7 @@ function getODData(timestamp){
 	}else{
 		return getJSON("http://202.114.123.53/zx/taxi/getAllOdDataM.php");
 	}
-	
+
 }
 /**
  * process of the OD-data
@@ -272,7 +328,7 @@ function processODData(data){
 	//calculate in/out between two district
 	for(let i = 0,length = taxi_data.length;i<length;i++){
 		var start_point = taxi_data[i];
-		
+
 		if(start_point.state !== 0){
 			continue;
 		}
@@ -295,7 +351,7 @@ function processODData(data){
 			draw_data[start_point.district][end_point.district] = 1;
 		}
 
-		i++;	
+		i++;
 	}
 	data = draw_data;
 	let districtLonLat = {
@@ -621,7 +677,7 @@ function taxiFlowChart(flowChart,linesData,pointsData){
 		    }
 		);
 	}
-	
+
 	option.series = series;
 	flowChart.setOption(option);
 	console.log(option);
@@ -689,8 +745,8 @@ function taxiPassOutChart(passChart,inData,outData,flowChart){
 	});
 	var flowOption = flowChart.getOption();
 	option.xAxis[0].data = flowChart.getOption().legend[0].data;
-	
-	
+
+
 	passChart.setOption(option);
 
 	passChart.on("click",e => {
