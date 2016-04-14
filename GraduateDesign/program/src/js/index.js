@@ -1,4 +1,4 @@
-import { WeiboTextMap,Event3DMap } from './weibovis.js';
+import { WeiboTextMap, Event3DMap, Event3DMapCesium} from './weibovis.js';
 import { layoutInit } from './layout.js';
 import { TaxiVisChart } from './taxiVis.js';
 import { PoiVisMap } from './poivis.js';
@@ -27,13 +27,13 @@ $("#textvis-list").on("click",e =>{
         case "weibo-event-vis":
             cleanMainWindow();
             if(INITOBJ.eventmap){
-                
+
                 INITOBJ.eventmap.show();
             }else{
-                var event_map = new Event3DMap("weibo-event-map");
+                var event_map = new Event3DMapCesium("weibo-event-map");
                 INITOBJ.eventmap = event_map;
             }
-           
+
             break;
     }
 });
@@ -59,7 +59,7 @@ $("#timevis-list").on("click",e =>{
         case "trajectory-vis":
             cleanMainWindow();
             if(INITOBJ.taxichart){
-                
+
                 INITOBJ.taxichart.show();
             }else{
                 var taxichart = new TaxiVisChart("trajectory-vis-container");

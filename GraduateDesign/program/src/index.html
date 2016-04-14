@@ -15,7 +15,9 @@
     <!-- build:css css/main.css -->
     <link rel="stylesheet" href="css/main.css">
     <!-- endbuild -->
-
+    <style>
+      @import url(vendor/Cesium/Widgets/widgets.css);
+    </style>
 </head>
 <body>
 <nav>
@@ -63,18 +65,18 @@
             </div>
         </div>
         <div id="trajectory-vis-container">
-            
+
         </div>
 
-       
+
     </div>
 </div>
 
 </body>
     <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=DKpnmZo8fX4xT7EfLjN9BCvd"></script>
-
+    <script type="text/javascript" src="vendor/Cesium/Cesium.js"></script>
     <script src='vendor/mapbox/mapbox.js'></script>
-   
+
     <script src='vendor/leaflet-markercluster/leaflet.markercluster-src.js'></script>
 
 
@@ -85,16 +87,16 @@
     <script type="text/javascript" src="vendor/polyfill.min.js"></script>
 
     <script type="text/javascript" src="vendor/cal-heatmap/d3.min.js"></script>
-    
+
     <script type="text/javascript" src="vendor/cal-heatmap/cal-heatmap.min.js"></script>
     <!--Import jQuery before materialize.js-->
     <script type="text/javascript" src="vendor/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="vendor/materialize/materialize.min.js"></script>
-    
+
     <script src="vendor/echarts/echarts.min.js"></script>
     <script src="vendor/echarts/bmap.js"></script>
  	<!-- build:js js/bundle.js -->
     <script type="text/javascript" src="js/bundle.js"></script>
     <!-- endbuild -->
-   
+
 </html>
