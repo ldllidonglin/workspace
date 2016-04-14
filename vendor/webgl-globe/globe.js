@@ -15,7 +15,7 @@ var DAT = DAT || {};
 
 DAT.Globe = function(container, opts) {
   opts = opts || {};
-  
+
   var colorFn = opts.colorFn || function(x) {
     var c = new THREE.Color();
     c.setHSL( ( 0.6 - ( x * 0.5 ) ), 1.0, 0.5 );
@@ -81,13 +81,13 @@ DAT.Globe = function(container, opts) {
       target = { x: Math.PI*3/2, y: Math.PI / 6.0 },
       targetOnDown = { x: 0, y: 0 };
 
-  
+
   var distance = 100000, distanceTarget = 100000;
 
   //change by lidonglin
   target.x = 0.2;
   distanceTarget = 500;
-  
+
   var padding = 40;
   var PI_HALF = Math.PI / 2;
 
@@ -195,7 +195,7 @@ DAT.Globe = function(container, opts) {
           lng = data[i + 1];
 //        size = data[i + 2];
           color = colorFnWrapper(data,i);
-          size = 0;
+          size = 50000;
           addPoint(lat, lng, size, color, this._baseGeometry);
         }
       }
@@ -263,6 +263,8 @@ DAT.Globe = function(container, opts) {
     point.lookAt(mesh.position);
 
     point.scale.z = Math.max( size, 0.1 ); // avoid non-invertible matrix
+    point.scale.x = 6; // avoid non-invertible matrix
+    point.scale.y = 6; // avoid non-invertible matrix
     point.updateMatrix();
 
     for (var i = 0; i < point.geometry.faces.length; i++) {
