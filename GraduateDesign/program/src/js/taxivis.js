@@ -35,7 +35,7 @@ async function getCharts(domId){
 	// cal_heat_dom.style.width = '500px';
 	// cal_heat_dom.style.height = '600px';
 	cal_heat_dom.id = 'cal-heatmap';
-	cal_heat_dom.className = 'col s4';
+	cal_heat_dom.className = 'col s6';
 	rowdiv.appendChild(cal_heat_dom);
 
 	//get cal-heat
@@ -47,19 +47,19 @@ async function getCharts(domId){
 	// passChartDom.style.width = '500px';
 	passChartDom.style.height = '600px';
 	passChartDom.id = 'taxi-pass-chart';
-	passChartDom.className = 'col s4';
+	passChartDom.className = 'col s6';
 	rowdiv.appendChild(passChartDom);
 
 	var flowChartDom = document.createElement('div');
 	flowChartDom.style.height = '600px';
 	flowChartDom.id = 'taxi-flow-chart';
-	flowChartDom.className = 'col s4';
-	rowdiv.appendChild(flowChartDom);
+	flowChartDom.className = 'col s6';
+	rowdiv2.appendChild(flowChartDom);
 
 	var flowChartDom2 = document.createElement('div');
 	flowChartDom2.style.height = '600px';
 	flowChartDom2.id = 'taxi-flow-chart2';
-	flowChartDom2.className = 'col s4';
+	flowChartDom2.className = 'col s6';
 	rowdiv2.appendChild(flowChartDom2);
 
 	container.appendChild(rowdiv);
@@ -118,6 +118,18 @@ async function getCalHeat(dom){
 		}
 	}
 
+	let max = 0;
+	let min = Infinity;
+	console.info(month_result);
+	for(let d in month_result){
+		if(month_result[d]>max){
+			max = month_result[d]
+		}
+		if(month_result[d]<min){
+			min = month_result[d]
+		}
+	}
+	var gap = (max-min)/5
 	var calMonth = new CalHeatMap();
 	calMonth.init({
 		itemSelector: dom,
@@ -129,7 +141,7 @@ async function getCalHeat(dom){
 		highlight: "now",
         cellSize: 40,
         subDomainTextFormat: "%d",
-        legend: [20000,23000,26000,29000,32000,35000],
+        legend: [min,min+gap,min+gap*2,min+gap*3,max],
         legendColors: {
            min: "green",
            max: "red",
@@ -495,12 +507,6 @@ function processODData(data){
 
 		temp_markline_data2[name] = temp_lime;
 		temp_point_data2[name] = temp_point;
-
-		var in_num = getDistrictIn(name);
-		taxi_region_in.push(in_num);
-
-		taxi_region_out.push(out_num);
-
 	}
 
 	return {
@@ -1102,6 +1108,9 @@ function taxiPassOutChart(passChart,inData,outData,flowChart){
 	    ],
 	    series : []
 	};
+	console.log('liu');
+	console.log(inData);
+	console.log(outData);
 	option.series.push({
 		name: '流入',
 		type: 'bar',

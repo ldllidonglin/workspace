@@ -361,7 +361,7 @@ var getCharts = (function () {
 						// cal_heat_dom.style.height = '600px';
 
 						cal_heat_dom.id = 'cal-heatmap';
-						cal_heat_dom.className = 'col s4';
+						cal_heat_dom.className = 'col s6';
 						rowdiv.appendChild(cal_heat_dom);
 
 						//get cal-heat
@@ -373,21 +373,21 @@ var getCharts = (function () {
 
 						passChartDom.style.height = '600px';
 						passChartDom.id = 'taxi-pass-chart';
-						passChartDom.className = 'col s4';
+						passChartDom.className = 'col s6';
 						rowdiv.appendChild(passChartDom);
 
 						flowChartDom = document.createElement('div');
 
 						flowChartDom.style.height = '600px';
 						flowChartDom.id = 'taxi-flow-chart';
-						flowChartDom.className = 'col s4';
-						rowdiv.appendChild(flowChartDom);
+						flowChartDom.className = 'col s6';
+						rowdiv2.appendChild(flowChartDom);
 
 						flowChartDom2 = document.createElement('div');
 
 						flowChartDom2.style.height = '600px';
 						flowChartDom2.id = 'taxi-flow-chart2';
-						flowChartDom2.className = 'col s4';
+						flowChartDom2.className = 'col s6';
 						rowdiv2.appendChild(flowChartDom2);
 
 						container.appendChild(rowdiv);
@@ -457,7 +457,8 @@ var getCharts = (function () {
 
 var getCalHeat = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(dom) {
-		var month_data, month_result, m, item, d, calMonth, titleDom;
+		var month_data, month_result, m, item, d, max, min, _d, gap, calMonth, titleDom;
+
 		return regeneratorRuntime.wrap(function _callee2$(_context2) {
 			while (1) {
 				switch (_context2.prev = _context2.next) {
@@ -478,6 +479,19 @@ var getCalHeat = (function () {
 							}
 						}
 
+						max = 0;
+						min = Infinity;
+
+						console.info(month_result);
+						for (_d in month_result) {
+							if (month_result[_d] > max) {
+								max = month_result[_d];
+							}
+							if (month_result[_d] < min) {
+								min = month_result[_d];
+							}
+						}
+						gap = (max - min) / 5;
 						calMonth = new CalHeatMap();
 
 						calMonth.init({
@@ -490,7 +504,7 @@ var getCalHeat = (function () {
 							highlight: "now",
 							cellSize: 40,
 							subDomainTextFormat: "%d",
-							legend: [20000, 23000, 26000, 29000, 32000, 35000],
+							legend: [min, min + gap, min + gap * 2, min + gap * 3, max],
 							legendColors: {
 								min: "green",
 								max: "red",
@@ -511,7 +525,7 @@ var getCalHeat = (function () {
 						titleDom.innerHTML = "2014年1月各天车流量";
 						dom.insertBefore(titleDom, dom.getElementsByTagName("svg")[0]);
 
-					case 11:
+					case 16:
 					case "end":
 						return _context2.stop();
 				}
@@ -917,11 +931,6 @@ function processODData(data) {
 
 		temp_markline_data2[name] = temp_lime;
 		temp_point_data2[name] = temp_point;
-
-		var in_num = getDistrictIn(name);
-		taxi_region_in.push(in_num);
-
-		taxi_region_out.push(out_num);
 	}
 
 	return {
@@ -1471,6 +1480,9 @@ function taxiPassOutChart(passChart, inData, outData, flowChart) {
 		}],
 		series: []
 	};
+	console.log('liu');
+	console.log(inData);
+	console.log(outData);
 	option.series.push({
 		name: '流入',
 		type: 'bar',
@@ -1730,17 +1742,47 @@ var Event3DMapCesium = (function () {
       console.log(data);
       for (var i = 0; i < data.length; i++) {
         viewer.entities.add({
-          name: data[i].name,
+          name: latlons[i].name,
           position: Cesium.Cartesian3.fromDegrees(latlons[i].lon, latlons[i].lat, 200000.0),
           cylinder: {
             length: data[i].num * 300,
             topRadius: 40000.0,
             bottomRadius: 40000.0,
             material: Cesium.Color.fromCssColorString('#F71552').withAlpha(1)
-          }
+          },
+          value: data[i].num
         });
       }
       viewer.zoomTo(viewer.entities);
+      var z, A;
+      var e = Cesium.Color.FUSCHIA,
+          o = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      o.setInputAction(function (o) {
+        if (void 0 != z) {
+          var i = z;
+          i.cylinder && (i.cylinder.material = A);
+        }
+        var t = viewer.scene.pick(o.position);
+        if (Cesium.defined(t)) {
+          var i = Cesium.defaultValue(t.id, t.primitive.id);
+          z = i, i.cylinder && (A = i.cylinder.material, i.cylinder.material = e);
+          viewer.infoBox.frame.style.display = 'block';
+          viewer.infoBox.frame.style.height = '30px';
+          var bodycontainer = viewer.infoBox.frame.contentDocument.body;
+          console.log(bodycontainer);
+          var old = bodycontainer.querySelector('#cy-value');
+          if (old) {
+            old.innerHTML = i.value;
+          } else {
+            var p = document.createElement("div");
+            p.id = 'cy-value';
+            p.innerHTML = i.value;
+            p.style.textAlign = 'center';
+            p.style.color = 'white';
+            bodycontainer.appendChild(p);
+          }
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     });
   }
 
@@ -2046,4 +2088,4 @@ exports.Event3DMapCesium = Event3DMapCesium;
 
 
 
-//# sourceMappingURL=bundle.js.09c8ab87.map
+//# sourceMappingURL=bundle.js.ae4a43f0.map

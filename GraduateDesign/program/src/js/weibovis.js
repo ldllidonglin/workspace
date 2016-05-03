@@ -200,17 +200,47 @@ class Event3DMapCesium{
         console.log(data);
         for(var i=0;i<data.length;i++){
           viewer.entities.add({
-            name : data[i].name,
+            name : latlons[i].name,
             position: Cesium.Cartesian3.fromDegrees(latlons[i].lon, latlons[i].lat, 200000.0),
             cylinder : {
               length : data[i].num*300,
               topRadius : 40000.0,
               bottomRadius : 40000.0,
               material : Cesium.Color.fromCssColorString('#F71552').withAlpha(1),
-            }
+            },
+            value: data[i].num
           });
         }
         viewer.zoomTo(viewer.entities);
+        var z,A;
+        var e = Cesium.Color.FUSCHIA, o = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        o.setInputAction(function(o) {
+          if (void 0 != z) {
+              var i = z;
+              i.cylinder && (i.cylinder.material = A)
+          }
+          var t = viewer.scene.pick(o.position);
+          if (Cesium.defined(t)) {
+              var i = Cesium.defaultValue(t.id, t.primitive.id);
+              z = i,
+              i.cylinder && (A = i.cylinder.material,
+              i.cylinder.material = e);
+              viewer.infoBox.frame.style.display = 'block';
+              viewer.infoBox.frame.style.height = '30px';
+              var bodycontainer = viewer.infoBox.frame.contentDocument.body
+              console.log(bodycontainer);
+              var old = bodycontainer.querySelector('#cy-value')
+              if(old){
+                old.innerHTML = i.value
+              }else{
+                var p = document.createElement("div");
+                p.id = 'cy-value';
+                p.innerHTML = i.value;
+                p.style.textAlign = 'center';
+                p.style.color = 'white'
+                bodycontainer.appendChild(p);
+              }
+          }}, Cesium.ScreenSpaceEventType.LEFT_CLICK)
       });
   }
   hide(){
