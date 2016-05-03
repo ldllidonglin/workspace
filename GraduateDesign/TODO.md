@@ -1,9 +1,9 @@
 # TODO
 ## weibo
 * add timeline
-* collecting weibo data of multiple cities
-* 3d visulazition
-* optimize keywords extraction
+* ~~collecting weibo data of multiple cities~~
+* ~~3d visulazition~~
+* ~~optimize keywords extraction~~
 
 ## POI
 * ~~adaptive visulization~~
@@ -11,4 +11,4 @@
 
 ## trajectory
 * add timeline
-* calendar-heatmap
+* ~~calendar-heatmap~~
