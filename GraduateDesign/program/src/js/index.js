@@ -1,7 +1,7 @@
-import { WeiboTextMap, Event3DMap, Event3DMapCesium} from './weibovis.js';
-import { layoutInit } from './layout.js';
-import { TaxiVisChart } from './taxiVis.js';
-import { PoiVisMap } from './poivis.js';
+import { WeiboTextMap, Event3DMap, Event3DMapCesium} from './weibovis.js'
+import { layoutInit } from './layout.js'
+import { TaxiVisChart } from './taxiVis.js'
+import { PoiVisMap } from './poivis.js'
 
 //global varible relate to vistap
 let INITOBJ={

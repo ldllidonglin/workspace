@@ -38,6 +38,7 @@ function getData(url){
       client.send();
 
       function handler() {
+        console.log(this.status)
         if(this.status === 500){
           alert("数据加载出错，请刷新浏览器");
         }
@@ -45,9 +46,9 @@ function getData(url){
           return;
         }
         if (this.status === 200) {
-          resolve(this.response);
+          resolve(this.response)
         } else {
-          reject(new Error(this.statusText));
+          reject(new Error(this.statusText))
         }
 
       };

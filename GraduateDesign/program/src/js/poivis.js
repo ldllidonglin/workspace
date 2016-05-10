@@ -2,12 +2,12 @@
  * the class of poi-vis-map
  */
 class PoiVisMap {
-	constructor(domId){
+  constructor(domId){
 		this.domId = domId;
-        $("#"+domId).show();
-        var map=initMap(domId);
+		$("#"+domId).show();
+		var map=initMap(domId);
 		$.get("http://202.114.123.53/zx/weibo/getWeiboData.php",{'city':'武汉'})
-		 .then(function(data){
+			.then(function(data){
 			data = JSON.parse(data);
 			var points = [];
 			var heatMapPoint = [];
@@ -50,11 +50,11 @@ class PoiVisMap {
 		});
 	}
 	show(){
-        $("#"+this.domId).show();
-    }
-    hide(){
-        $("#"+this.domId).hide();
-    }
+		$("#"+this.domId).show();
+	}
+	hide(){
+		$("#"+this.domId).hide();
+	}
 }
 
 /**

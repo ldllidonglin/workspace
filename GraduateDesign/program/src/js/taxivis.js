@@ -143,7 +143,15 @@ async function getCalHeat(dom){
 		highlight: "now",
         cellSize: 40,
         subDomainTextFormat: "%d",
-        legend: [min+gap,min+gap*2,min+gap*3,max],
+		displayLegend: true,
+		legend: [min+gap, min+gap*2,min+gap*3,min+gap*4],
+		legendColors: {
+			min: "#00E400",
+			max: "#7E0023",
+			empty: "#ffffff",
+			base: "grey",
+			overflow: "grey"
+		},
         onClick: function(date,nb){
         	if(nb === 0){
         		return ;

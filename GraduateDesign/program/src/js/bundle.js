@@ -506,7 +506,15 @@ var getCalHeat = (function () {
 							highlight: "now",
 							cellSize: 40,
 							subDomainTextFormat: "%d",
-							legend: [min + gap, min + gap * 2, min + gap * 3, max],
+							displayLegend: true,
+							legend: [min + gap, min + gap * 2, min + gap * 3, min + gap * 4],
+							legendColors: {
+								min: "#00E400",
+								max: "#7E0023",
+								empty: "#ffffff",
+								base: "grey",
+								overflow: "grey"
+							},
 							onClick: function onClick(date, nb) {
 								if (nb === 0) {
 									return;
@@ -1614,6 +1622,7 @@ function getData(url) {
     client.send();
 
     function handler() {
+      console.log(this.status);
       if (this.status === 500) {
         alert("数据加载出错，请刷新浏览器");
       }
