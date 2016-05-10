@@ -129,6 +129,8 @@ async function getCalHeat(dom){
 			min = month_result[d]
 		}
 	}
+	console.log(max);
+	console.log(min);
 	var gap = (max-min)/5
 	var calMonth = new CalHeatMap();
 	calMonth.init({
@@ -141,14 +143,7 @@ async function getCalHeat(dom){
 		highlight: "now",
         cellSize: 40,
         subDomainTextFormat: "%d",
-        legend: [min,min+gap,min+gap*2,min+gap*3,max],
-        legendColors: {
-           min: "green",
-           max: "red",
-           empty: "#ffffff",
-           base: "grey",
-           overflow: "grey"
-        },
+        legend: [min+gap,min+gap*2,min+gap*3,max],
         onClick: function(date,nb){
         	if(nb === 0){
         		return ;

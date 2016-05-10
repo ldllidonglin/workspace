@@ -491,6 +491,8 @@ var getCalHeat = (function () {
 								min = month_result[_d];
 							}
 						}
+						console.log(max);
+						console.log(min);
 						gap = (max - min) / 5;
 						calMonth = new CalHeatMap();
 
@@ -504,14 +506,7 @@ var getCalHeat = (function () {
 							highlight: "now",
 							cellSize: 40,
 							subDomainTextFormat: "%d",
-							legend: [min, min + gap, min + gap * 2, min + gap * 3, max],
-							legendColors: {
-								min: "green",
-								max: "red",
-								empty: "#ffffff",
-								base: "grey",
-								overflow: "grey"
-							},
+							legend: [min + gap, min + gap * 2, min + gap * 3, max],
 							onClick: function onClick(date, nb) {
 								if (nb === 0) {
 									return;
@@ -525,7 +520,7 @@ var getCalHeat = (function () {
 						titleDom.innerHTML = "2014年1月各天车流量";
 						dom.insertBefore(titleDom, dom.getElementsByTagName("svg")[0]);
 
-					case 16:
+					case 18:
 					case "end":
 						return _context2.stop();
 				}
