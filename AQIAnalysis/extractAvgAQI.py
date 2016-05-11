@@ -9,7 +9,7 @@ def getavgAQI():
   avgaqis=collection.aggregate([
     {
       '$match':{
-        'timestamp':{'$gte':1435680000,'$lte':1443628800}
+        'timestamp':{'$gte':1420041600,'$lte':1427731200}
       }
     },
     {
@@ -44,7 +44,7 @@ def getavgAQI():
         }
     }])
   for avgaqi in avgaqis:
-    with open('./avgaqis201503.csv','a') as w:
+    with open('./avgaqis201501.csv','a') as w:
         w.write(avgaqi['_id'].encode("utf-8")+","+str(round(avgaqi['avgaqi']))+","+str(avgaqi['geo'][0][0])+","+str(avgaqi['geo'][0][1])+"\n")
 
 getavgAQI()

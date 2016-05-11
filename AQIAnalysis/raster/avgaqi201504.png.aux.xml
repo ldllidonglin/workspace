@@ -1,0 +1,6 @@
+<PAMDataset>
+  <SRS>PROJCS[&quot;Google_Maps_Global_Mercator&quot;,GEOGCS[&quot;GCS_WGS_1984&quot;,DATUM[&quot;WGS_1984&quot;,SPHEROID[&quot;WGS_1984&quot;,6378137.0,298.257223563]],PRIMEM[&quot;Greenwich&quot;,0.0],UNIT[&quot;Degree&quot;,0.0174532925199433]],PROJECTION[&quot;Mercator_1SP&quot;],PARAMETER[&quot;false_easting&quot;,0.0],PARAMETER[&quot;false_northing&quot;,0.0],PARAMETER[&quot;central_meridian&quot;,0.0],PARAMETER[&quot;latitude_of_origin&quot;,0.0],PARAMETER[&quot;latitude_of_origin&quot;,0.0],UNIT[&quot;Meter&quot;,1.0]]</SRS>
+  <Metadata domain="IMAGE_STRUCTURE">
+    <MDI key="INTERLEAVE">PIXEL</MDI>
+  </Metadata>
+</PAMDataset>
