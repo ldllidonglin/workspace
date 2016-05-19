@@ -146,7 +146,6 @@ var PoiVisMap = (function () {
 			});
 
 			createClusterLens(cluster, map, 'zoomlens');
-
 			map.on('zoomend', function (e) {
 				var current_level = e.target.getZoom();
 				console.log(current_level);
@@ -264,6 +263,13 @@ function createClusterLens(cluster, map, lendomId) {
 	cluster.on('clusterlayerremove', function (e) {
 		console.log(e);
 	});
+
+	map.on('click', function () {
+		$("#" + lendomId).hide();
+	});
+	map.on("mouseout", function (e) {
+		$("#" + lendomId).hide();
+	});
 }
 /**
  * create HeatMap
@@ -341,7 +347,7 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 var getCharts = (function () {
 	var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(domId) {
-		var container, rowdiv, rowdiv2, cal_heat_dom, passChartDom, flowChartDom, flowChartDom2, flowChart, passChart, flowChart2, wuhan_od, result_data;
+		var container, rowdiv, rowdiv2, rowdiv3, cal_heat_dom, passChartDom, flowChartDom, flowChartDom2, heatmapdom, flowChart, passChart, flowChart2, wuhan_od, result_data;
 		return regeneratorRuntime.wrap(function _callee$(_context) {
 			while (1) {
 				switch (_context.prev = _context.next) {
@@ -354,6 +360,10 @@ var getCharts = (function () {
 						rowdiv2 = document.createElement("div");
 
 						rowdiv2.className = 'row';
+
+						rowdiv3 = document.createElement("div");
+
+						rowdiv3.className = 'row';
 
 						//cal-heatmap month
 						cal_heat_dom = document.createElement('div');
@@ -392,6 +402,13 @@ var getCharts = (function () {
 
 						container.appendChild(rowdiv);
 						container.appendChild(rowdiv2);
+						heatmapdom = document.createElement('div');
+
+						heatmapdom.style.height = '600px';
+						heatmapdom.id = 'heatmap-taxi';
+						heatmapdom.className = 'col s12';
+						rowdiv3.appendChild(heatmapdom);
+						container.appendChild(rowdiv3);
 
 						flowChart = echarts.getInstanceByDom(flowChartDom);
 
@@ -415,10 +432,10 @@ var getCharts = (function () {
 						flowChart2.showLoading();
 
 						//get od-data of wuhan
-						_context.next = 38;
+						_context.next = 46;
 						return getODData();
 
-					case 38:
+					case 46:
 						wuhan_od = _context.sent;
 
 						//get day-linechart
@@ -435,9 +452,18 @@ var getCharts = (function () {
 
 						//get PassOutChart
 						taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
+
+						_context.next = 54;
+						return getODData(1389283200);
+
+					case 54:
+						wuhan_od = _context.sent;
+
+						getHeatMap(wuhan_od, 'heatmap-taxi');
+
 						return _context.abrupt("return", { 'flowChart': flowChart, 'passChart': passChart });
 
-					case 45:
+					case 57:
 					case "end":
 						return _context.stop();
 				}
@@ -449,6 +475,7 @@ var getCharts = (function () {
 		return ref.apply(this, arguments);
 	};
 })();
+
 /**
  * get the calheat
  * @param  {[string]} dom [dom's id of calheat container]
@@ -482,7 +509,6 @@ var getCalHeat = (function () {
 						max = 0;
 						min = Infinity;
 
-						console.info(month_result);
 						for (_d in month_result) {
 							if (month_result[_d] > max) {
 								max = month_result[_d];
@@ -491,9 +517,8 @@ var getCalHeat = (function () {
 								min = month_result[_d];
 							}
 						}
-						console.log(max);
-						console.log(min);
-						gap = (max - min) / 5;
+
+						gap = (max - min) / 7;
 						calMonth = new CalHeatMap();
 
 						calMonth.init({
@@ -507,7 +532,7 @@ var getCalHeat = (function () {
 							cellSize: 40,
 							subDomainTextFormat: "%d",
 							displayLegend: true,
-							legend: [min + gap, min + gap * 2, min + gap * 3, min + gap * 4],
+							legend: [min + gap, min + gap * 2, min + gap * 3, min + gap * 4, min + gap * 5, min + gap * 6],
 							legendColors: {
 								min: "#00E400",
 								max: "#7E0023",
@@ -528,7 +553,7 @@ var getCalHeat = (function () {
 						titleDom.innerHTML = "2014年1月各天车流量";
 						dom.insertBefore(titleDom, dom.getElementsByTagName("svg")[0]);
 
-					case 18:
+					case 15:
 					case "end":
 						return _context2.stop();
 				}
@@ -575,10 +600,11 @@ var getChartByTime = (function () {
 						taxiFlowChart2(flowChart2, result_data['lines2'], result_data['points2']);
 
 						//get PassOutChart
-						console.log(passChart);
+
 						taxiPassOutChart(passChart, result_data['in'], result_data['out'], flowChart);
 						flowChart.hideLoading();
 						passChart.hideLoading();
+						getHeatMap(wuhan_od);
 
 					case 16:
 					case "end":
@@ -632,7 +658,37 @@ var TaxiVisChart = (function () {
 	return TaxiVisChart;
 })();
 
-function getDayLineMap(odData) {
+function getHeatMap(data, domId) {
+	var heatMapPoint = [];
+	for (var i = 0, length = data.length; i < length; i++) {
+		var item = data[i];
+		var lat = item.geom.coordinates[1];
+		var lon = item.geom.coordinates[0];
+		heatMapPoint.push([lat, lon, 100.0]);
+	}
+	//get heatmap
+	if (!window.taximap) {
+		L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
+		var map = L.mapbox.map(domId, 'mapbox.light').setView([30.608623, 114.274462], 11);
+		window.taximap = map;
+	}
+	if (!window.taxiheat) {
+		var gradient = {
+			0.55: '#c7f127',
+			0.65: '#daf127',
+			0.7: '#f3f73b',
+			0.8: '#FBEF0E',
+			0.9: '#FFD700',
+			0.99: '#f48e1a',
+			1: 'red'
+		};
+		var heat = L.heatLayer(heatMapPoint, { radius: 15, gradient: gradient });
+		map.addLayer(heat);
+		window.taxiheat = heat;
+	} else {
+		window.taxiheat.setLatLngs(heatMapPoint);
+	}
+}function getDayLineMap(odData) {
 	var origintime = odData[0].time_point;
 	var origindate = new Date(origintime * 1000);
 	var starttime = new Date(origindate.getFullYear(), origindate.getMonth(), origindate.getDate(), 0).getTime() / 1000;
@@ -843,7 +899,7 @@ function processODData(data) {
 
 		i++;
 	}
-	console.log(draw_data2);
+
 	data = draw_data;
 	var districtLonLat = {
 		"江汉区": [114.274462, 30.608623],
@@ -968,7 +1024,6 @@ function taxiFlowChart(flowChart, linesData, pointsData) {
 		tooltip: {
 			trigger: 'item',
 			formatter: function formatter(v) {
-				console.log(v);
 				return v.data[0].name + " > " + v.data[1].name + " : " + v.value;
 			}
 		},
@@ -1185,11 +1240,7 @@ function taxiFlowChart(flowChart, linesData, pointsData) {
 
 	option.series = series;
 	flowChart.setOption(option);
-	console.log(option);
 	flowChart.hideLoading();
-	// flowChart.on("bmapRoam",function(e){
-	// 	console.log(e);
-	// });
 	return flowChart;
 }
 
@@ -1431,7 +1482,6 @@ function taxiFlowChart2(flowChart, linesData, pointsData) {
 
 	option.series = series;
 	flowChart.setOption(option);
-	console.log(option);
 	flowChart.hideLoading();
 	// flowChart.on("bmapRoam",function(e){
 	// 	console.log(e);
@@ -1483,9 +1533,6 @@ function taxiPassOutChart(passChart, inData, outData, flowChart) {
 		}],
 		series: []
 	};
-	console.log('liu');
-	console.log(inData);
-	console.log(outData);
 	option.series.push({
 		name: '流入',
 		type: 'bar',
@@ -1894,10 +1941,14 @@ function getWeiboTextCluster(data, map, idfData) {
 
   map.addLayer(markers);
   //hide the tooltip when mouse out the cluster or container
+  //无效
   map.on("mouseover", function (e) {
     $("#tooltip").hide();
   });
   map.on("mouseout", function (e) {
+    $("#tooltip").hide();
+  });
+  map.on("click", function (e) {
     $("#tooltip").hide();
   });
 }
@@ -2092,4 +2143,4 @@ exports.Event3DMapCesium = Event3DMapCesium;
 
 
 
-//# sourceMappingURL=bundle.js.3a312b27.map
+//# sourceMappingURL=bundle.js.570099ef.map

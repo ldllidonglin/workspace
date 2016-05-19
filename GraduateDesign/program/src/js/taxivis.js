@@ -30,6 +30,9 @@ async function getCharts(domId){
 	var rowdiv2 = document.createElement("div");
 	rowdiv2.className = 'row';
 
+	var rowdiv3 = document.createElement("div");
+	rowdiv3.className = 'row';
+
 	//cal-heatmap month
 	var cal_heat_dom = document.createElement('div');
 	// cal_heat_dom.style.width = '500px';
@@ -64,6 +67,12 @@ async function getCharts(domId){
 
 	container.appendChild(rowdiv);
 	container.appendChild(rowdiv2);
+	var heatmapdom = document.createElement('div');
+	heatmapdom.style.height = '600px';
+	heatmapdom.id = 'heatmap-taxi';
+	heatmapdom.className = 'col s12';
+	rowdiv3.appendChild(heatmapdom);
+	container.appendChild(rowdiv3);
 
 	var flowChart = echarts.getInstanceByDom(flowChartDom);
 	if(!flowChart){
@@ -100,7 +109,45 @@ async function getCharts(domId){
 
 	//get PassOutChart
 	taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
+
+	var wuhan_od = await getODData(1389283200);
+  getHeatMap(wuhan_od,'heatmap-taxi');
+
+
 	return { 'flowChart':flowChart,'passChart':passChart }
+}
+
+function getHeatMap(data,domId){
+	var heatMapPoint=[];
+	for(var i=0,length=data.length;i<length;i++){
+		var item = data[i];
+		var lat=item.geom.coordinates[1];
+		var lon=item.geom.coordinates[0];
+		heatMapPoint.push([lat,lon,100.0]);
+	}
+	//get heatmap
+	if(!window.taximap){
+		L.mapbox.accessToken = 'pk.eyJ1IjoiZG9uZ2xpbmdlIiwiYSI6Ik1VbXI1TkkifQ.7ROsya7Q8kZ-ky9OmhKTvg';
+  	var map = L.mapbox.map(domId, 'mapbox.light')
+        .setView([30.608623,114.274462], 11);
+  	window.taximap = map;
+	}
+	if(!window.taxiheat){
+	  var gradient = {
+				0.55:'#c7f127',
+				0.65:'#daf127',
+				0.7:'#f3f73b',
+				0.8:'#FBEF0E',
+				0.9:'#FFD700',
+				0.99:'#f48e1a',
+				1:'red'
+		};
+		var heat = L.heatLayer(heatMapPoint, {radius:15,gradient:gradient});
+	  map.addLayer(heat)
+	  window.taxiheat = heat;
+	}else{
+		window.taxiheat.setLatLngs(heatMapPoint);
+	}
 }
 /**
  * get the calheat
@@ -120,7 +167,7 @@ async function getCalHeat(dom){
 
 	let max = 0;
 	let min = Infinity;
-	console.info(month_result);
+
 	for(let d in month_result){
 		if(month_result[d]>max){
 			max = month_result[d]
@@ -129,9 +176,8 @@ async function getCalHeat(dom){
 			min = month_result[d]
 		}
 	}
-	console.log(max);
-	console.log(min);
-	var gap = (max-min)/5
+
+	var gap = (max-min)/7
 	var calMonth = new CalHeatMap();
 	calMonth.init({
 		itemSelector: dom,
@@ -141,10 +187,10 @@ async function getCalHeat(dom){
 		data:month_result,
 		subDomain: 'x_day',
 		highlight: "now",
-        cellSize: 40,
-        subDomainTextFormat: "%d",
+    cellSize: 40,
+    subDomainTextFormat: "%d",
 		displayLegend: true,
-		legend: [min+gap, min+gap*2,min+gap*3,min+gap*4],
+		legend: [min+gap, min+gap*2,min+gap*3,min+gap*4,min+gap*5,min+gap*6],
 		legendColors: {
 			min: "#00E400",
 			max: "#7E0023",
@@ -188,10 +234,11 @@ async function getChartByTime(timestamp){
 	taxiFlowChart2(flowChart2,result_data['lines2'],result_data['points2']);
 
 	//get PassOutChart
-	console.log(passChart);
+
 	taxiPassOutChart(passChart,result_data['in'],result_data['out'],flowChart);
 	flowChart.hideLoading();
 	passChart.hideLoading();
+	getHeatMap(wuhan_od);
 }
 /**
  * [getDayLineMap by data]
@@ -418,7 +465,7 @@ function processODData(data){
 
 		i++;
 	}
-	console.log(draw_data2);
+
 	data = draw_data;
 	let districtLonLat = {
 		"江汉区":[114.274462,30.608623],
@@ -542,11 +589,10 @@ function taxiFlowChart(flowChart,linesData,pointsData){
 	        }
 	    },
 	    tooltip : {
-	        trigger: 'item',
-	        formatter: function (v) {
-	        	console.log(v);
-				return v.data[0].name+" > " + v.data[1].name+" : "+v.value;
-			}
+        trigger: 'item',
+        formatter: function (v) {
+						return v.data[0].name+" > " + v.data[1].name+" : "+v.value;
+				}
 	    },
 	    legend: {
 	        orient: 'vertical',
@@ -784,11 +830,7 @@ function taxiFlowChart(flowChart,linesData,pointsData){
 
 	option.series = series;
 	flowChart.setOption(option);
-	console.log(option);
 	flowChart.hideLoading();
-	// flowChart.on("bmapRoam",function(e){
-	// 	console.log(e);
-	// });
 	return flowChart;
 }
 
@@ -1053,7 +1095,6 @@ function taxiFlowChart2(flowChart,linesData,pointsData){
 
 	option.series = series;
 	flowChart.setOption(option);
-	console.log(option);
 	flowChart.hideLoading();
 	// flowChart.on("bmapRoam",function(e){
 	// 	console.log(e);
@@ -1111,9 +1152,6 @@ function taxiPassOutChart(passChart,inData,outData,flowChart){
 	    ],
 	    series : []
 	};
-	console.log('liu');
-	console.log(inData);
-	console.log(outData);
 	option.series.push({
 		name: '流入',
 		type: 'bar',

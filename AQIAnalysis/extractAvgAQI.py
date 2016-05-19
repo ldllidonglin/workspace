@@ -6,6 +6,7 @@ client=MongoClient('mongodb://202.114.123.54:27017/')
 db=client.aqi
 collection=db['aqi2015b']
 def getavgAQI():
+  starttime = 
   avgaqis=collection.aggregate([
     {
       '$match':{

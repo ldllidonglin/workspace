@@ -341,10 +341,14 @@ for(var x in data){
 
   map.addLayer(markers);
   //hide the tooltip when mouse out the cluster or container
+  //无效
   map.on("mouseover",function(e){
       $("#tooltip").hide();
   });
   map.on("mouseout",function(e){
+     $("#tooltip").hide();
+  });
+  map.on("click",function(e){
      $("#tooltip").hide();
   });
 }

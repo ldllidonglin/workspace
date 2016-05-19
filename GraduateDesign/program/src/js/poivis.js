@@ -28,7 +28,6 @@ class PoiVisMap {
 			});
 
 			createClusterLens(cluster,map,'zoomlens');
-
 			map.on('zoomend',function(e){
 				var current_level = e.target.getZoom();
 				console.log(current_level);
@@ -140,6 +139,13 @@ function createClusterLens(cluster,map,lendomId){
 	cluster.on('clusterlayerremove',function(e){
 		console.log(e);
 	});
+
+	map.on('click',function(){
+		$("#"+lendomId).hide();
+	});
+	map.on("mouseout",function(e){
+    $("#"+lendomId).hide();
+  });
 
 }
 /**

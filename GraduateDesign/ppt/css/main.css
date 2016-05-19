@@ -1,0 +1,61 @@
+.img-item {
+	text-align: center;
+	margin: 10px;
+}
+
+.content {
+	height: 100%;
+  width: 100%;
+  text-align: left;
+  font-size: 40px;
+}
+
+.middletext {
+	text-align: center;
+	line-height: 60px;
+	vertical-align: middle;
+}
+
+.thinks {
+	font-size: 180px;
+	text-align: center;
+	color: #F3BC07;
+}
+
+.centerli {
+	text-align: center;
+}
+
+.noneli {
+	list-style: none;
+}
+
+.font30 {
+	font-size: 30px;
+}
+
+.font40 {
+	font-size: 40px;
+}
+
+.left-text {
+	text-align: left;
+}
+
+.vertical-margin {
+	margin-top:-100px;
+	text-align: left;
+	font-size: 40px;
+}
+
+.vertical-margin2 {
+	margin-top:-200px;
+	text-align: left;
+	font-size: 40px;
+}
+
+.vertical-margin3 {
+	margin-top:-300px;
+	text-align: left;
+	font-size: 40px;
+}
